@@ -29,11 +29,11 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg:       #ECE3D2;
+  --bg:       #E6DDD0;
   --divider:  #CEC6B6;
   --text:     #3A3827;
   --text-mid: #5C5A48;
-  --gold:     #B07800;
+  --gold:     #FEAD00;
 }
 
 html, body {
@@ -89,7 +89,7 @@ body {
 
 .positioning {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: 0.4em;
   color: var(--gold);
   text-transform: uppercase;
@@ -106,15 +106,15 @@ body {
   margin-bottom: 40px;
 }
 
-/* ── Two-column body on desktop ── */
+/* ── Body copy ── */
 .body-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 580px;
   width: 100%;
   margin-bottom: 40px;
-  text-align: left;
+  text-align: center;
 }
 
 .body {
@@ -141,7 +141,7 @@ body {
 
 .contact-label {
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: 0.4em;
   color: var(--gold);
   text-transform: uppercase;
@@ -180,11 +180,6 @@ footer span { margin: 0 10px; }
 @media (max-width: 720px) {
   .page { padding: 60px 32px; }
   .headline { font-size: 26px; }
-  .body-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    text-align: center;
-  }
 }
 
 @media (max-width: 480px) {
