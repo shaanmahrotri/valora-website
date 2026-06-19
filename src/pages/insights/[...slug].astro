@@ -1,0 +1,28 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('insights');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'insights'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+<Layout title={`Valora — ${post.data.title}`} pageLabel="Insights" active="insights">
+  <article class="insight-article">
+    <span class="insight-pillar">{post.data.pillar}</span>
+    <h1 class="headline">{post.data.title}</h1>
+    <div class="body-block insight-body">
+      <Content />
+    </div>
+  </article>
+</Layout>

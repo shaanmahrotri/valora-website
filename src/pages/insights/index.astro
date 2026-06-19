@@ -1,0 +1,22 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('insights')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+<Layout title="Valora — Insights" pageLabel="Insights" active="insights">
+  <div class="insights-list">
+    {posts.map((post) => (
+      <a href={`/insights/${post.slug}`} class="insight-item">
+        <span class="insight-pillar">{post.data.pillar}</span>
+        <p class="insight-title">{post.data.title}</p>
+        <p class="insight-summary">{post.data.summary}</p>
+      </a>
+    ))}
+    {posts.length === 0 && (
+      <p class="body">Nothing published yet. Check back shortly.</p>
+    )}
+  </div>
+</Layout>
