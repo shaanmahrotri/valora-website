@@ -72,4 +72,12 @@ const { position, prevHref = null, nextHref = null, showSearch = true } = Astro.
   .bar__arrow { font-size: 18px; line-height: 1; color: var(--ink); }
   .bar__arrow--off { color: var(--divider); }
   .bar__pos { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--faint-alt); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    /* Sit below the 56px sticky mobile header */
+    .bar { top: 56px; padding: 11px 20px; flex-wrap: nowrap; gap: 12px; }
+    .bar__search { min-width: 0; flex: 1; }
+    /* Hide prev/next position indicator on small screens — toolbar is already tight */
+    .bar__nav { display: none; }
+  }
 </style>

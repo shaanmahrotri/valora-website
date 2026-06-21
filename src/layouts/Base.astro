@@ -5,7 +5,7 @@ import LeftPanel from '../components/LeftPanel.astro';
 interface Props {
   title: string;
   description?: string;
-  active?: string;   // which nav item is current: about | approach | partners | insights | contact
+  active?: string;   // about | approach | partners | insights | contact
 }
 const { title, description = 'Fractional family office architecture.', active = '' } = Astro.props;
 ---
@@ -25,11 +25,245 @@ const { title, description = 'Fractional family office architecture.', active = 
     <title>{title}</title>
   </head>
   <body>
+
+    <!-- ── Mobile sticky header (hidden on desktop) ── -->
+    <header class="mob-header">
+      <a href="/" class="mob-brand" aria-label="Valora — home">
+        <span class="mob-brand__slash">/</span>
+        <span class="mob-brand__word">Valora</span>
+      </a>
+    </header>
+
     <div class="shell">
       <LeftPanel active={active} />
       <main class="content">
         <slot />
       </main>
     </div>
+
+    <!-- ── Mobile floating pill (hidden on desktop) ── -->
+    <button class="mob-pill" id="mob-pill" aria-label="Open navigation" aria-expanded="false">
+      <span class="mob-pill__dot"></span>
+      <span class="mob-pill__label">Sections</span>
+      <span class="mob-pill__arr" aria-hidden="true">▴</span>
+    </button>
+
+    <!-- ── Mobile bottom sheet (hidden on desktop) ── -->
+    <div class="mob-sheet" id="mob-sheet" aria-hidden="true">
+      <div class="mob-sheet__scrim" id="mob-scrim"></div>
+      <div class="mob-sheet__body" role="dialog" aria-label="Site navigation">
+        <div class="mob-sheet__handle"></div>
+        <div class="mob-sheet__top">
+          <span>Go to section</span>
+          <button id="mob-close" aria-label="Close navigation">×</button>
+        </div>
+        <a href="/#about"    class={`mob-sheet__item${active === 'about'     ? ' mob-sheet__item--active' : ''}`}><span>About</span><span class="mob-chev">›</span></a>
+        <a href="/#approach" class={`mob-sheet__item${active === 'approach'  ? ' mob-sheet__item--active' : ''}`}><span>Approach</span><span class="mob-chev">›</span></a>
+        <a href="/#partners" class={`mob-sheet__item${active === 'partners'  ? ' mob-sheet__item--active' : ''}`}><span>Partners</span><span class="mob-chev">›</span></a>
+        <a href="/insights"  class={`mob-sheet__item mob-sheet__item--ins${active === 'insights' ? ' mob-sheet__item--active' : ''}`}><span>Insights</span><span class="mob-chev">›</span></a>
+        <a href="/#contact"  class={`mob-sheet__item mob-sheet__item--last${active === 'contact' ? ' mob-sheet__item--active' : ''}`}><span>Contact</span><span class="mob-chev">›</span></a>
+      </div>
+    </div>
+
+    <script>
+      const pill  = document.getElementById('mob-pill');
+      const sheet = document.getElementById('mob-sheet');
+      const scrim = document.getElementById('mob-scrim');
+      const close = document.getElementById('mob-close');
+
+      function openSheet() {
+        sheet?.classList.add('is-open');
+        sheet?.setAttribute('aria-hidden', 'false');
+        pill?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeSheet() {
+        sheet?.classList.remove('is-open');
+        sheet?.setAttribute('aria-hidden', 'true');
+        pill?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      pill?.addEventListener('click', openSheet);
+      scrim?.addEventListener('click', closeSheet);
+      close?.addEventListener('click', closeSheet);
+      // Close sheet on nav — page will navigate away
+      sheet?.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSheet));
+    </script>
+
   </body>
 </html>
+
+<style>
+  /* ─── Mobile header ──────────────────────────────── */
+  .mob-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    height: 56px;
+    background: var(--sand);
+    border-bottom: 1px solid var(--divider);
+    align-items: center;
+    justify-content: center;
+  }
+  .mob-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mob-brand__slash {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    opacity: 0.55;
+    line-height: 1;
+  }
+  .mob-brand__word {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  /* ─── Floating pill ──────────────────────────────── */
+  .mob-pill {
+    display: none;
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    align-items: center;
+    gap: 11px;
+    background: var(--chrome);
+    padding: 13px 24px;
+    border-radius: 100px;
+    box-shadow: 0 18px 36px -12px rgba(20, 18, 12, 0.65);
+    white-space: nowrap;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mob-pill__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+  .mob-pill__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #F4EFE6;
+  }
+  .mob-pill__arr {
+    font-size: 9px;
+    color: #9A917D;
+    line-height: 1;
+    margin-left: 2px;
+  }
+
+  /* ─── Bottom sheet ───────────────────────────────── */
+  .mob-sheet {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    pointer-events: none;
+  }
+  .mob-sheet.is-open { pointer-events: auto; }
+
+  .mob-sheet__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(21, 20, 15, 0.45);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .mob-sheet.is-open .mob-sheet__scrim { opacity: 1; }
+
+  .mob-sheet__body {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--sand);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -24px 48px -22px rgba(20, 18, 12, 0.5);
+    padding: 14px 0 44px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .mob-sheet.is-open .mob-sheet__body { transform: translateY(0); }
+
+  .mob-sheet__handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 100px;
+    background: var(--divider);
+    margin: 0 auto 18px;
+  }
+  .mob-sheet__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px 14px;
+  }
+  .mob-sheet__top > span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--faint-alt);
+  }
+  .mob-sheet__top button {
+    font-size: 18px;
+    line-height: 1;
+    color: var(--faint-alt);
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .mob-sheet__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 24px;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-top: 1px solid #DCD3C4;
+    text-decoration: none;
+  }
+  .mob-sheet__item--last { border-bottom: 1px solid #DCD3C4; }
+  .mob-chev { font-size: 14px; color: #C2B79D; }
+
+  /* Insights item always gets the left-border treatment */
+  .mob-sheet__item--ins {
+    padding-left: 21px;
+    border-left: 3px solid transparent;
+  }
+
+  /* Active state */
+  .mob-sheet__item--active { font-weight: 500; }
+  .mob-sheet__item--ins.mob-sheet__item--active {
+    border-left-color: var(--gold);
+    background: rgba(254, 173, 0, 0.07);
+  }
+
+  /* ─── Show on mobile ─────────────────────────────── */
+  @media (max-width: 900px) {
+    .mob-header { display: flex; }
+    .mob-pill   { display: flex; }
+    .mob-sheet  { display: block; }
+  }
+</style>

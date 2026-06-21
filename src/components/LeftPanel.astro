@@ -62,7 +62,8 @@ const latest = (await getCollection('insights'))
     overflow-y: auto;
   }
   @media (max-width: 900px) {
-    .panel { position: static; height: auto; width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--divider); }
+    /* Hidden on mobile — replaced by sticky header + floating pill + bottom sheet in Base.astro */
+    .panel { display: none; }
   }
 
   .brand { display: block; }

@@ -83,6 +83,7 @@ img { display: block; max-width: 100%; }
 .section--first { border-top: none; }
 
 @media (max-width: 900px) {
-  :root { --pad: 32px; }
-  .shell { flex-direction: column; }
+  :root { --pad: 24px; }
+  /* panel is hidden on mobile; shell stays a row with just the content column */
+  .content { padding-bottom: 96px; /* clear the floating pill */ }
 }
