@@ -1,0 +1,128 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props { active?: string; }
+const { active = '' } = Astro.props;
+
+const latest = (await getCollection('insights'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+---
+
+<aside class="panel">
+  <div>
+    <a href="/" class="brand" aria-label="Valora — home">
+      <span class="brand__slash">/</span>
+      <span class="brand__word">Valora</span>
+    </a>
+    <div class="gold-rule" style="margin-bottom:44px"></div>
+
+    <nav class="nav">
+      <a href="/#about" class:list={["nav__link", { 'nav__link--active': active === 'about' }]}>About</a>
+      <a href="/#approach" class:list={["nav__link", { 'nav__link--active': active === 'approach' }]}>Approach</a>
+      <a href="/#partners" class:list={["nav__link", { 'nav__link--active': active === 'partners' }]}>Partners</a>
+
+      <details class="ins" open={active === 'insights'}>
+        <summary class="ins__summary">
+          <span>Insights</span>
+          <span class="ins__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="ins__panel">
+          <div class="ins__latest">Latest</div>
+          {latest.map((a) => (
+            <a href={`/insights/${a.slug}`} class="ins__item">
+              <div class="ins__title">{a.data.title}</div>
+              <div class="ins__meta">{a.data.author.split(' ')[0]} · {a.data.dateShort}</div>
+            </a>
+          ))}
+          <a href="/insights" class="ins__all">All insights →</a>
+        </div>
+      </details>
+
+      <a href="/#contact" class:list={["nav__link", { 'nav__link--active': active === 'contact' }]}>Contact</a>
+    </nav>
+  </div>
+  <p class="panel__copy">© Valora 2026</p>
+</aside>
+
+<style>
+  .panel {
+    width: var(--panel);
+    min-width: var(--panel);
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 52px 44px;
+    border-right: 1px solid var(--divider);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    background: var(--sand);
+    overflow-y: auto;
+  }
+  @media (max-width: 900px) {
+    .panel { position: static; height: auto; width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--divider); }
+  }
+
+  .brand { display: block; }
+  .brand__slash { display: block; font-size: 56px; font-weight: 700; color: var(--ink); opacity: 0.65; line-height: 1; margin-bottom: 24px; }
+  .brand__word { display: block; font-size: 26px; font-weight: 400; letter-spacing: 0.4em; color: var(--ink); text-transform: uppercase; white-space: nowrap; margin-bottom: 14px; }
+
+  .nav { display: flex; flex-direction: column; gap: 18px; }
+  .nav__link {
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 2px;
+    transition: color 0.15s;
+  }
+  .nav__link:hover { color: var(--ink); }
+  .nav__link--active { color: var(--ink); border-bottom: 2px solid var(--gold); }
+
+  .ins { width: 100%; }
+  .ins__summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .ins__summary::-webkit-details-marker { display: none; }
+  .ins__chev {
+    width: 9px; height: 9px;
+    border-right: 1.5px solid var(--gold-deep);
+    border-bottom: 1.5px solid var(--gold-deep);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 3px;
+  }
+  .ins[open] .ins__chev { transform: rotate(-135deg); }
+
+  .ins__panel {
+    margin-top: 14px;
+    padding-left: 14px;
+    border-left: 2px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ins__latest { font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-deep); }
+  .ins__item { display: block; }
+  .ins__title { font-size: 12px; font-weight: 400; color: var(--ink); line-height: 1.35; letter-spacing: 0.01em; }
+  .ins__item:hover .ins__title { color: var(--gold-deep); }
+  .ins__meta { font-size: 9.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint-alt); margin-top: 4px; }
+  .ins__all { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-deep); margin-top: 2px; }
+  .ins__all:hover { color: var(--ink); }
+
+  .panel__copy { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; color: var(--muted); opacity: 0.55; margin-top: 40px; }
+</style>

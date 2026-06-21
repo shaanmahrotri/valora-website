@@ -1,0 +1,69 @@
+---
+// A swappable image slot.
+//   - Pass `src` (a path in /public, e.g. "/images/hero.jpg") to drop in a real photo.
+//   - Leave `src` empty to show the flat editorial placeholder with its caption + spec.
+interface Props {
+  ratio?: string;        // e.g. "7 / 5"  (CSS aspect-ratio). Omit when `fill`.
+  fill?: boolean;        // stretch to parent height instead of using a ratio
+  label?: string;        // caption label, e.g. "Photograph · hero"
+  note?: string;         // intended-shot description
+  spec?: string;         // size hint, e.g. "1400 × 1000"
+  src?: string;          // real image path in /public
+  alt?: string;
+}
+const { ratio = '7 / 5', fill = false, label, note, spec, src, alt = '' } = Astro.props;
+---
+
+{src ? (
+  <div class="plate" style={fill ? 'height:100%;' : `aspect-ratio:${ratio};`}>
+    <img src={src} alt={alt} />
+  </div>
+) : (
+  <div class="plate plate--empty" style={fill ? 'height:100%;' : `aspect-ratio:${ratio};`}>
+    {(label || note || spec) && (
+      <div class="plate__cap">
+        {label && <div class="plate__label">{label}</div>}
+        {note && <div class="plate__note">{note}</div>}
+        {spec && <div class="plate__spec">{spec}</div>}
+      </div>
+    )}
+  </div>
+)}
+
+<style>
+  .plate {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+  .plate img { width: 100%; height: 100%; object-fit: cover; }
+  .plate--empty {
+    background-color: var(--plate);
+    background-image: var(--plate-hatch);
+    box-shadow: inset 0 0 0 1px rgba(58, 56, 39, 0.12);
+  }
+  .plate__cap {
+    position: absolute;
+    left: 22px;
+    bottom: 20px;
+    right: 22px;
+    max-width: 340px;
+  }
+  .plate__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin-bottom: 8px;
+  }
+  .plate__note { font-size: 12.5px; line-height: 1.55; color: #4A4736; }
+  .plate__spec {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--gold-ink);
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+</style>

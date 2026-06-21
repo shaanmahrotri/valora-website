@@ -1,0 +1,75 @@
+---
+// Sticky toolbar for the Insights section.
+interface Props {
+  position?: string;   // "1 / 5" — shown only in article view
+  prevHref?: string | null;
+  nextHref?: string | null;
+  showSearch?: boolean;
+}
+const { position, prevHref = null, nextHref = null, showSearch = true } = Astro.props;
+---
+
+<div class="bar">
+  <a href="/" class="bar__btn"><span class="bar__chev">‹</span> Back to main</a>
+  <span class="bar__sep"></span>
+  <a href="/insights" class="bar__btn">Insights home</a>
+
+  {showSearch && (
+    <label class="bar__search">
+      <span class="bar__icon">⌕</span>
+      <input id="insights-search" type="search" placeholder="Search insights" autocomplete="off" />
+    </label>
+  )}
+
+  {position && (
+    <div class="bar__nav">
+      {prevHref ? <a href={prevHref} class="bar__arrow" aria-label="Previous article">‹</a> : <span class="bar__arrow bar__arrow--off">‹</span>}
+      <span class="bar__pos">{position}</span>
+      {nextHref ? <a href={nextHref} class="bar__arrow" aria-label="Next article">›</a> : <span class="bar__arrow bar__arrow--off">›</span>}
+    </div>
+  )}
+</div>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--sand);
+    border-bottom: 1px solid var(--divider);
+    padding: 16px var(--pad);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .bar__btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .bar__btn:hover { color: var(--ink); }
+  .bar__chev { font-size: 15px; line-height: 1; }
+  .bar__sep { width: 1px; height: 16px; background: var(--divider); }
+  .bar__search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    border: 1px solid var(--divider);
+    background: var(--paper);
+    padding: 7px 14px;
+    min-width: 230px;
+  }
+  .bar__icon { font-size: 13px; color: var(--faint-alt); line-height: 1; }
+  .bar__search input { border: none; background: none; outline: none; font-size: 13px; font-weight: 400; color: var(--ink); width: 100%; }
+  .bar__nav { display: flex; align-items: center; gap: 14px; }
+  .bar__arrow { font-size: 18px; line-height: 1; color: var(--ink); }
+  .bar__arrow--off { color: var(--divider); }
+  .bar__pos { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--faint-alt); white-space: nowrap; }
+</style>

@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+import LeftPanel from '../components/LeftPanel.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  active?: string;   // which nav item is current: about | approach | partners | insights | contact
+}
+const { title, description = 'Fractional family office architecture.', active = '' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="shell">
+      <LeftPanel active={active} />
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

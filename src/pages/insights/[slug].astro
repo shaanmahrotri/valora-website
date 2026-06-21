@@ -1,0 +1,155 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Plate from '../../components/Plate.astro';
+import InsightsBar from '../../components/InsightsBar.astro';
+
+export async function getStaticPaths() {
+  const items = (await getCollection('insights')).sort((a, b) => a.data.order - b.data.order);
+  return items.map((entry, i) => ({
+    params: { slug: entry.slug },
+    props: {
+      entry,
+      index: i,
+      total: items.length,
+      prev: items[i - 1] ?? null,   // newer
+      next: items[i + 1] ?? null,   // older
+    },
+  }));
+}
+
+const { entry, index, total, prev, next } = Astro.props;
+const { Content } = await entry.render();
+const d = entry.data;
+---
+
+<Base title={`${d.title} — Valora Insights`} active="insights" description={d.excerpt}>
+  <InsightsBar
+    position={`${index + 1} / ${total}`}
+    prevHref={prev ? `/insights/${prev.slug}` : null}
+    nextHref={next ? `/insights/${next.slug}` : null}
+  />
+
+  <article>
+    <header class="head">
+      <div class="head__kicker">
+        <span class="tick"></span>
+        <span>Insights / {d.topic}</span>
+        <span class="tick"></span>
+      </div>
+      <h1 class="head__title">{d.title}</h1>
+      <div class="head__meta">
+        <span class="byline"><img src={d.authorImg} alt={d.author} /> {d.author}</span>
+        <span class="dot"></span>
+        <span class="muted">{d.read}</span>
+        <span class="dot"></span>
+        <span class="muted">{d.date}</span>
+      </div>
+    </header>
+
+    <div class="lead-wrap">
+      <Plate ratio="21 / 9" src={d.leadImage} label="Photograph · lead" note={d.leadCaption} spec="2100 × 900" alt={d.title} />
+    </div>
+
+    <div class="body">
+      <div class="prose">
+        <Content />
+      </div>
+
+      <div class="author">
+        <img src={d.authorImg} alt={d.author} />
+        <div>
+          <div class="author__name">{d.author}</div>
+          <div class="author__role">{d.role}</div>
+        </div>
+        <a href="/insights" class="author__all">← All insights</a>
+      </div>
+    </div>
+
+    <nav class="pn">
+      {prev ? (
+        <a href={`/insights/${prev.slug}`} class="pn__cell pn__cell--prev">
+          <span class="pn__label">‹ Previous</span>
+          <span class="pn__title">{prev.data.title}</span>
+        </a>
+      ) : (
+        <span class="pn__cell pn__cell--prev pn__cell--off">
+          <span class="pn__label">‹ Previous</span>
+          <span class="pn__title">You’re at the latest article</span>
+        </span>
+      )}
+      <div class="pn__div"></div>
+      {next ? (
+        <a href={`/insights/${next.slug}`} class="pn__cell pn__cell--next">
+          <span class="pn__label">Next ›</span>
+          <span class="pn__title">{next.data.title}</span>
+        </a>
+      ) : (
+        <span class="pn__cell pn__cell--next pn__cell--off">
+          <span class="pn__label">Next ›</span>
+          <span class="pn__title">You’re at the first article</span>
+        </span>
+      )}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .head { padding: 80px var(--pad) 0; }
+  .head > * { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .head__kicker { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 30px; font-size: 11px; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); }
+  .tick { width: 24px; height: 2px; background: var(--gold); }
+  .head__title { font-size: 46px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.5px; text-align: center; }
+  .head__meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; margin-top: 30px; }
+  .byline { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: var(--ink); letter-spacing: 0.02em; }
+  .byline img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); }
+  .muted { font-size: 13px; font-weight: 400; color: var(--faint); }
+
+  .lead-wrap { padding: 56px var(--pad) 0; }
+
+  .body { padding: 64px var(--pad); }
+  .prose { max-width: 680px; margin: 0 auto; }
+
+  /* long-form rhythm */
+  .prose :global(p) { font-size: 18px; font-weight: 300; color: var(--body); line-height: 1.85; }
+  .prose :global(p + p) { margin-top: 26px; }
+  .prose :global(h3) { font-size: 22px; font-weight: 400; color: var(--ink); letter-spacing: -0.2px; margin-top: 44px; margin-bottom: 0; }
+  .prose :global(h3 + p) { margin-top: 26px; }
+  .prose :global(blockquote) { border-left: 3px solid var(--gold); padding: 6px 0 6px 28px; margin: 40px 0; }
+  .prose :global(blockquote p) { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-weight: 300; font-size: 25px; color: var(--ink); line-height: 1.5; letter-spacing: -0.2px; }
+  /* drop cap on the opening paragraph */
+  .prose :global(p:first-of-type::first-letter) {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 300;
+    font-size: 68px;
+    line-height: 0.82;
+    color: var(--ink);
+    float: left;
+    margin: 6px 14px 0 0;
+  }
+
+  .author { display: flex; align-items: center; gap: 14px; max-width: 680px; margin: 32px auto 0; padding-top: 28px; border-top: 1px solid var(--divider); }
+  .author img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; }
+  .author__name { font-size: 14px; font-weight: 500; color: var(--ink); letter-spacing: 0.02em; }
+  .author__role { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+  .author__all { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint-alt); }
+  .author__all:hover { color: var(--ink); }
+
+  .pn { border-top: 1px solid var(--divider); display: grid; grid-template-columns: 1fr 1px 1fr; }
+  .pn__cell { display: flex; flex-direction: column; gap: 8px; padding: 36px var(--pad); transition: background 0.15s; }
+  .pn__cell--prev { align-items: flex-start; text-align: left; }
+  .pn__cell--next { align-items: flex-end; text-align: right; }
+  .pn__cell--off { opacity: 0.32; }
+  a.pn__cell:hover { background: rgba(58,56,39,0.022); }
+  .pn__label { font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint-alt); }
+  .pn__title { font-size: 16px; font-weight: 300; color: var(--ink); line-height: 1.35; }
+  .pn__div { background: var(--divider); }
+
+  @media (max-width: 900px) {
+    .head__title { font-size: 34px; }
+    .pn { grid-template-columns: 1fr; }
+    .pn__div { display: none; }
+    .pn__cell--next { align-items: flex-start; text-align: left; border-top: 1px solid var(--divider); }
+  }
+</style>
