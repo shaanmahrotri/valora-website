@@ -16,3 +16,9 @@ yarn-error.log*
 
 # macOS
 .DS_Store
+
+# Netlify CLI local state
+.netlify/
+
+# skill eval scratch (test run outputs, not part of the skill itself)
+.claude/skills/*-workspace/

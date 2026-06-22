@@ -1,0 +1,105 @@
+# Local editing: run `npx decap-server` in a second terminal alongside
+# `npm run dev`, then open http://localhost:4321/admin.
+#
+# For the eventual hosted setup, swap `backend` to:
+#   backend:
+#     name: git-gateway
+#     branch: main
+# and deploy as usual — Netlify Identity handles auth there.
+backend:
+  name: proxy
+  proxy_url: http://localhost:8081/api/v1
+  branch: astro-rebuild
+
+media_folder: public
+public_folder: /
+
+collections:
+  - name: pages
+    label: Homepage sections
+    files:
+      - name: hero
+        label: Hero
+        file: src/content/hero/index.yaml
+        fields:
+          - { name: kicker, label: Kicker, widget: string }
+          - { name: headline, label: "Headline (h1)", widget: text }
+          - name: bodyParagraphs
+            label: Body paragraphs
+            widget: list
+            field: { name: paragraph, label: Paragraph, widget: text }
+          - { name: maxim, label: "Maxim line", widget: string }
+          - { name: photo, label: "Lead photo path", widget: string }
+
+      - name: approach
+        label: Approach
+        file: src/content/approach/index.yaml
+        fields:
+          - { name: tagline, label: "Tagline / statement", widget: text }
+          - name: paragraphs
+            label: Flowing paragraphs
+            widget: list
+            field: { name: paragraph, label: Paragraph, widget: text }
+          - { name: photo, label: "Photo path", widget: string }
+          - { name: verdict, label: "Verdict line", widget: text }
+
+      - name: contact
+        label: Contact
+        file: src/content/contact/index.yaml
+        fields:
+          - { name: lead, label: "Lead paragraph", widget: text }
+
+      - name: settings
+        label: "Site settings"
+        file: src/content/settings/index.yaml
+        fields:
+          - { name: insightsEnabled, label: "Insights section enabled (uncheck to take the whole section offline - nav, homepage block and all article pages - while you're still working on it)", widget: boolean, default: true }
+
+      - name: partnersSection
+        label: "Partners section copy"
+        file: src/content/partnersSection/index.yaml
+        fields:
+          - { name: intro, label: "Intro (before the bios)", widget: text }
+          - { name: closing, label: "Closing - What we bring (after the bios)", widget: text }
+
+  - name: partners
+    label: Partners
+    folder: src/content/partners
+    extension: yaml
+    format: yaml
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { name: name, label: Name, widget: string }
+      - { name: role, label: Role, widget: string }
+      - { name: photo, label: "Photo path", widget: string }
+      - { name: email, label: Email, widget: string }
+      - name: bio
+        label: Bio paragraphs
+        widget: list
+        field: { name: paragraph, label: Paragraph, widget: text }
+
+  - name: insights
+    label: Insights
+    folder: src/content/insights
+    extension: md
+    format: frontmatter
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}} — {{published}}"
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: published, label: "Published (uncheck to pull this off the live site)", widget: boolean, default: true }
+      - { name: topic, label: Topic, widget: string }
+      - { name: excerpt, label: Excerpt, widget: text }
+      - { name: author, label: Author, widget: string }
+      - { name: role, label: Role, widget: string }
+      - { name: authorImg, label: "Author photo path", widget: string }
+      - { name: read, label: "Read time", widget: string }
+      - { name: date, label: "Date (long)", widget: string }
+      - { name: dateShort, label: "Date (short)", widget: string }
+      - { name: order, label: Order, widget: number, value_type: int }
+      - { name: featured, label: Featured, widget: boolean, default: false }
+      - { name: leadCaption, label: "Lead caption", widget: text }
+      - { name: leadImage, label: "Lead image path (optional)", widget: string, required: false }
+      - { name: body, label: Body, widget: markdown }

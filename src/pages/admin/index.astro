@@ -1,0 +1,22 @@
+---
+// Decap CMS admin. Bundled via Vite as a plain ESM import - no Astro
+// component-rendering pipeline involved, so no framework integration
+// (@astrojs/react etc.) is needed here, unlike Keystatic's island-based
+// admin UI which required one.
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex" />
+    <title>Valora — Content Manager</title>
+    <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
+  </head>
+  <body>
+    <script>
+      import CMS from 'decap-cms-app';
+      CMS.init();
+    </script>
+  </body>
+</html>

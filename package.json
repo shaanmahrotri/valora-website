@@ -8,9 +8,17 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cms": "bash scripts/open-cms.sh"
   },
   "dependencies": {
     "astro": "^4.16.0"
+  },
+  "devDependencies": {
+    "decap-cms-app": "^3.14.1",
+    "decap-server": "^3.9.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tslib": "^2.8.1"
   }
 }
