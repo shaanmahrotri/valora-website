@@ -34,6 +34,18 @@ PIDS+=("$!")
 
 trap 'kill "${PIDS[@]}" 2>/dev/null' EXIT INT TERM
 
-( sleep 2 && open "http://localhost:4321/admin" ) &
+(
+  # Astro's dev server restarts itself once on a cold start (regenerating
+  # .astro/ types triggers its own watcher) - poll for a real response
+  # instead of guessing a fixed delay, so the browser doesn't open into
+  # that restart and land on a broken/empty page.
+  for _ in $(seq 1 60); do
+    if curl -fs -o /dev/null "http://localhost:4321/admin"; then
+      open "http://localhost:4321/admin"
+      break
+    fi
+    sleep 0.5
+  done
+) &
 
 wait
