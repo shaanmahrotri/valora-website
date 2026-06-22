@@ -78,7 +78,7 @@ img { display: block; max-width: 100%; }
 
 .section {
   border-top: 1px solid var(--divider);
-  padding: 104px var(--pad);
+  padding: 64px var(--pad);
 }
 .section--first { border-top: none; }
 
