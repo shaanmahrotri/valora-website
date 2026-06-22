@@ -33,21 +33,11 @@ const summary = insights.slice(1, 4);
 
     <div class="approach__split">
       <div class="approach__col">
-        <p>AI is everywhere in family office conversation right now: urgent advice, conflicting opinions, vendors pitching certainty no one actually has. Families are left deciding what's signal and what's noise, often without anyone they fully trust to tell them.</p>
-        <p>We are not an AI practice. We are a family office advisory practice, and AI is the most consequential change moving through the landscape right now. Our job is what it has always been: helping families decide what to adopt, what to resist and what to govern, whether the subject is succession, structure or, currently, AI.</p>
+        <p>Every family office is carrying more than it used to: succession, governance, a generational handover in progress, a regulatory shift that lands without warning. The volume itself is the problem as much as any single issue inside it.</p>
+        <p>We work inside the family office, not outside it. No decks lobbed over the fence, no frameworks left behind for someone else to run. We sit with your team and do the work alongside them, lending expertise rather than adding another voice to manage.</p>
+        <p>That holds whatever is moving through the landscape at the time. Right now AI is one of the things moving fastest, and we are not an AI practice because of it. We help families decide what to adopt, what to resist and what to govern, whether the subject is succession, structure or, currently, AI.</p>
       </div>
       <Plate ratio="4 / 5" src="/material.jpg" alt="An architectural oak joinery detail in raking light" label="Photograph · material" note="A single architectural detail, stone or oak, raking light across the surface. Material, craft, permanence. Restrained and close." spec="1100 × 1375" />
-    </div>
-
-    <div class="approach__pair">
-      <div>
-        <div class="microlabel">Inside the office</div>
-        <p>We work inside the family office, not outside it. No decks lobbed over the fence, no frameworks left behind for someone else to run. We sit with your team and do the work alongside them, lending expertise rather than adding another voice to manage.</p>
-      </div>
-      <div>
-        <div class="microlabel">Taking weight off</div>
-        <p>Family offices are carrying more at once than they used to: succession, regulation, generational handover and, currently, AI. Our job is to take weight off the principal and the team, not add to the noise around them.</p>
-      </div>
     </div>
 
     <div class="approach__verdict">
@@ -161,8 +151,7 @@ const summary = insights.slice(1, 4);
 
   .approach__split { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr); gap: 72px; align-items: start; }
   .approach__col { max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
-  .approach__col p, .approach__pair p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
-  .approach__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; margin-top: 64px; padding-top: 48px; border-top: 1px solid var(--divider); }
+  .approach__col p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
   .approach__verdict { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); max-width: 40em; }
   .approach__verdict p { font-size: 22px; font-weight: 300; color: var(--ink); line-height: 1.5; letter-spacing: -0.2px; }
 
@@ -206,7 +195,7 @@ const summary = insights.slice(1, 4);
   .contact__mail:hover { border-color: var(--gold); }
 
   @media (max-width: 900px) {
-    .hero, .approach__split, .approach__pair, .insights-summary__grid { grid-template-columns: 1fr; gap: 40px; }
+    .hero, .approach__split, .insights-summary__grid { grid-template-columns: 1fr; gap: 40px; }
     .hero { min-height: 0; }
     .hero__plate { min-height: 360px; }
   }
