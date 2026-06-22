@@ -28,6 +28,7 @@ const latest = (await getCollection('insights'))
           <span class="ins__chev" aria-hidden="true"></span>
         </summary>
         <div class="ins__panel">
+          <a href="/insights" class="ins__all">All insights →</a>
           <div class="ins__latest">Latest</div>
           {latest.map((a) => (
             <a href={`/insights/${a.slug}`} class="ins__item">
@@ -35,7 +36,6 @@ const latest = (await getCollection('insights'))
               <div class="ins__meta">{a.data.author.split(' ')[0]} · {a.data.dateShort}</div>
             </a>
           ))}
-          <a href="/insights" class="ins__all">All insights →</a>
         </div>
       </details>
 
