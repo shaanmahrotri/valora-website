@@ -1,5 +1,6 @@
 ---
 title: "When to build, when to borrow: capacity in a ten-person office"
+published: true
 topic: "Operations"
 excerpt: "Small offices cannot do everything in-house, and should not try. A practical view of where to hold capability and where to rent it."
 author: "Shaan Mahrotri"

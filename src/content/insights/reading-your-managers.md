@@ -1,5 +1,6 @@
 ---
 title: "Reading your managers: what independent oversight actually looks like"
+published: true
 topic: "Oversight"
 excerpt: "Most oversight reports tell you what happened. Good oversight tells you what to ask next."
 author: "Shaan Mahrotri"

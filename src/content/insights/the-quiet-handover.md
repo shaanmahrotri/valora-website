@@ -1,5 +1,6 @@
 ---
 title: "The quiet handover: preparing the next generation without rushing them"
+published: true
 topic: "Succession"
 excerpt: "Succession fails more often from haste than from neglect. The case for a handover measured in years, not announcements."
 author: "Tom Rutherford"

@@ -1,5 +1,6 @@
 ---
 title: "Why structure should follow values, not the other way around"
+published: true
 topic: "Foundations"
 excerpt: "Most offices are built around assets. The ones that last are built around the family. A case for starting with identity, and letting structure follow."
 author: "Shaan Mahrotri"

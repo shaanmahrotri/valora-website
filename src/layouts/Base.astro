@@ -1,4 +1,5 @@
 ---
+import { getEntry } from 'astro:content';
 import '../styles/global.css';
 import LeftPanel from '../components/LeftPanel.astro';
 
@@ -8,6 +9,9 @@ interface Props {
   active?: string;   // about | approach | partners | insights | contact
 }
 const { title, description = 'Fractional family office architecture.', active = '' } = Astro.props;
+
+const settings = await getEntry('settings', 'index');
+const insightsEnabled = settings.data.insightsEnabled;
 ---
 
 <!doctype html>
@@ -60,7 +64,9 @@ const { title, description = 'Fractional family office architecture.', active = 
         <a href="/#about"    class={`mob-sheet__item${active === 'about'     ? ' mob-sheet__item--active' : ''}`}><span>About</span><span class="mob-chev">›</span></a>
         <a href="/#approach" class={`mob-sheet__item${active === 'approach'  ? ' mob-sheet__item--active' : ''}`}><span>Approach</span><span class="mob-chev">›</span></a>
         <a href="/#partners" class={`mob-sheet__item${active === 'partners'  ? ' mob-sheet__item--active' : ''}`}><span>Partners</span><span class="mob-chev">›</span></a>
-        <a href="/insights"  class={`mob-sheet__item mob-sheet__item--ins${active === 'insights' ? ' mob-sheet__item--active' : ''}`}><span>Insights</span><span class="mob-chev">›</span></a>
+        {insightsEnabled && (
+          <a href="/insights"  class={`mob-sheet__item mob-sheet__item--ins${active === 'insights' ? ' mob-sheet__item--active' : ''}`}><span>Insights</span><span class="mob-chev">›</span></a>
+        )}
         <a href="/#contact"  class={`mob-sheet__item mob-sheet__item--last${active === 'contact' ? ' mob-sheet__item--active' : ''}`}><span>Contact</span><span class="mob-chev">›</span></a>
       </div>
     </div>
@@ -113,14 +119,14 @@ const { title, description = 'Fractional family office architecture.', active = 
     gap: 8px;
   }
   .mob-brand__slash {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--ink);
     opacity: 0.55;
     line-height: 1;
   }
   .mob-brand__word {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 400;
     letter-spacing: 0.36em;
     text-transform: uppercase;

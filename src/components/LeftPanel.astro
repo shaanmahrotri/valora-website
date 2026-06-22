@@ -1,12 +1,17 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 
 interface Props { active?: string; }
 const { active = '' } = Astro.props;
 
-const latest = (await getCollection('insights'))
-  .sort((a, b) => a.data.order - b.data.order)
-  .slice(0, 3);
+const settings = await getEntry('settings', 'index');
+const insightsEnabled = settings.data.insightsEnabled;
+
+const latest = insightsEnabled
+  ? (await getCollection('insights', ({ data }) => data.published))
+      .sort((a, b) => a.data.order - b.data.order)
+      .slice(0, 3)
+  : [];
 ---
 
 <aside class="panel">
@@ -22,22 +27,24 @@ const latest = (await getCollection('insights'))
       <a href="/#approach" class:list={["nav__link", { 'nav__link--active': active === 'approach' }]}>Approach</a>
       <a href="/#partners" class:list={["nav__link", { 'nav__link--active': active === 'partners' }]}>Partners</a>
 
-      <details class="ins" open={active === 'insights'}>
-        <summary class="ins__summary">
-          <span>Insights</span>
-          <span class="ins__chev" aria-hidden="true"></span>
-        </summary>
-        <div class="ins__panel">
-          <a href="/insights" class="ins__all">All insights →</a>
-          <div class="ins__latest">Latest</div>
-          {latest.map((a) => (
-            <a href={`/insights/${a.slug}`} class="ins__item">
-              <div class="ins__title">{a.data.title}</div>
-              <div class="ins__meta">{a.data.author.split(' ')[0]} · {a.data.dateShort}</div>
-            </a>
-          ))}
-        </div>
-      </details>
+      {insightsEnabled && (
+        <details class="ins" open={active === 'insights'}>
+          <summary class="ins__summary">
+            <span>Insights</span>
+            <span class="ins__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="ins__panel">
+            <a href="/insights" class="ins__all">All insights →</a>
+            <div class="ins__latest">Latest</div>
+            {latest.map((a) => (
+              <a href={`/insights/${a.slug}`} class="ins__item">
+                <div class="ins__title">{a.data.title}</div>
+                <div class="ins__meta">{a.data.author.split(' ')[0]} · {a.data.dateShort}</div>
+              </a>
+            ))}
+          </div>
+        </details>
+      )}
 
       <a href="/#contact" class:list={["nav__link", { 'nav__link--active': active === 'contact' }]}>Contact</a>
     </nav>
@@ -67,8 +74,8 @@ const latest = (await getCollection('insights'))
   }
 
   .brand { display: block; }
-  .brand__slash { display: block; font-size: 56px; font-weight: 700; color: var(--ink); opacity: 0.65; line-height: 1; margin-bottom: 24px; }
-  .brand__word { display: block; font-size: 26px; font-weight: 400; letter-spacing: 0.4em; color: var(--ink); text-transform: uppercase; white-space: nowrap; margin-bottom: 14px; }
+  .brand__slash { display: block; font-size: 67px; font-weight: 700; color: var(--ink); opacity: 0.65; line-height: 1; margin-bottom: 24px; }
+  .brand__word { display: block; font-size: 31px; font-weight: 400; letter-spacing: 0.4em; color: var(--ink); text-transform: uppercase; white-space: nowrap; margin-bottom: 14px; }
 
   .nav { display: flex; flex-direction: column; gap: 18px; }
   .nav__link {

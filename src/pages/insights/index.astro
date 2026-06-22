@@ -1,10 +1,15 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Plate from '../../components/Plate.astro';
 import InsightsBar from '../../components/InsightsBar.astro';
 
-const items = (await getCollection('insights')).sort((a, b) => a.data.order - b.data.order);
+const settings = await getEntry('settings', 'index');
+if (!settings.data.insightsEnabled) {
+  return Astro.redirect('/');
+}
+
+const items = (await getCollection('insights', ({ data }) => data.published)).sort((a, b) => a.data.order - b.data.order);
 const featured = items[0];
 const rest = items.slice(1);
 ---

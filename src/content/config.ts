@@ -6,6 +6,7 @@ const insights = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
+    published: z.boolean().default(true), // uncheck in the admin to pull it from the live site without deleting it
     topic: z.string(),
     excerpt: z.string(),
     author: z.string(),
@@ -21,4 +22,65 @@ const insights = defineCollection({
   }),
 });
 
-export const collections = { insights };
+// Single-entry "data" collections backing the homepage sections.
+// Editable via the local Decap CMS admin (npm run cms -> /admin) as well
+// as by hand — each is one YAML file at src/content/<name>/index.yaml.
+const hero = defineCollection({
+  type: 'data',
+  schema: z.object({
+    kicker: z.string(),
+    headline: z.string(),
+    bodyParagraphs: z.array(z.string()),
+    maxim: z.string(),
+    photo: z.string(),
+  }),
+});
+
+const approach = defineCollection({
+  type: 'data',
+  schema: z.object({
+    tagline: z.string(),
+    paragraphs: z.array(z.string()),
+    photo: z.string(),
+    verdict: z.string(),
+  }),
+});
+
+const contact = defineCollection({
+  type: 'data',
+  schema: z.object({
+    lead: z.string(),
+  }),
+});
+
+// Site-wide switches, editable from the admin. src/content/settings/index.yaml.
+const settings = defineCollection({
+  type: 'data',
+  schema: z.object({
+    insightsEnabled: z.boolean().default(true), // uncheck to take the whole Insights section offline (nav, homepage block, and all article pages) while it's still being worked on
+  }),
+});
+
+// One YAML file per partner, flat in src/content/partners/<slug>.yaml.
+const partners = defineCollection({
+  type: 'data',
+  schema: z.object({
+    name: z.string(),
+    role: z.string(),
+    photo: z.string(),
+    email: z.string(),
+    bio: z.array(z.string()),
+  }),
+});
+
+// Section-level copy for the Partners section (distinct from the per-partner
+// bios above) - the intro line before the bios and the closing statement after.
+const partnersSection = defineCollection({
+  type: 'data',
+  schema: z.object({
+    intro: z.string(),
+    closing: z.string(),
+  }),
+});
+
+export const collections = { insights, hero, approach, contact, partners, partnersSection, settings };

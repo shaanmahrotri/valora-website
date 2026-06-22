@@ -1,11 +1,24 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Plate from '../components/Plate.astro';
 
-const insights = (await getCollection('insights')).sort((a, b) => a.data.order - b.data.order);
+const settings = await getEntry('settings', 'index');
+const insightsEnabled = settings.data.insightsEnabled;
+
+const insights = insightsEnabled
+  ? (await getCollection('insights', ({ data }) => data.published)).sort((a, b) => a.data.order - b.data.order)
+  : [];
 const featured = insights[0];
 const summary = insights.slice(1, 4);
+
+const hero = await getEntry('hero', 'index');
+const approach = await getEntry('approach', 'index');
+const contact = await getEntry('contact', 'index');
+const allPartners = await getCollection('partners');
+const tom = allPartners.find((p) => p.data.name === 'Tom Rutherford')!;
+const shaan = allPartners.find((p) => p.data.name === 'Shaan Mahrotri')!;
+const partnersSection = await getEntry('partnersSection', 'index');
 ---
 
 <Base title="Valora — Fractional Family Office Architecture" active="about">
@@ -13,117 +26,120 @@ const summary = insights.slice(1, 4);
   <!-- HERO -->
   <section id="about" class="hero">
     <div class="hero__text">
-      <span class="kicker" style="margin-bottom:36px">Fractional Family Office Architecture</span>
-      <h1>We help families build offices that work for them.</h1>
+      <span class="kicker" style="margin-bottom:36px">{hero.data.kicker}</span>
+      <h1>{hero.data.headline}</h1>
       <div class="hero__body">
-        <p>Family offices that begin with strategic foundations - values, identity, how decisions are made - are built to last. Structure, governance and investment policy all perform differently when they emerge from a clear sense of who the family is.</p>
-        <p>We work with families at every stage - building from scratch, refining what exists or navigating transition - always at your cadence, not ours.</p>
+        {hero.data.bodyParagraphs.map((p) => <p>{p}</p>)}
       </div>
-      <p class="hero__maxim">Foundation first. Operations second. Evolution always.</p>
+      <p class="hero__maxim">{hero.data.maxim}</p>
     </div>
     <div class="hero__plate">
-      <Plate fill={true} src="/hero.jpg" alt="A quiet, well-kept study in soft morning daylight" label="Photograph · hero" note="A quiet, well-kept study in soft morning daylight. Architecture and stillness, no people. Warm neutral tones, deep negative space." spec="1600 × 1800" />
+      <Plate fill={true} src={hero.data.photo} alt="A quiet, well-kept study in soft morning daylight" label="Photograph · hero" note="A quiet, well-kept study in soft morning daylight. Architecture and stillness, no people. Warm neutral tones, deep negative space." spec="1600 × 1800" />
     </div>
   </section>
 
   <!-- APPROACH -->
   <section id="approach" class="section">
     <span class="kicker" style="margin-bottom:32px">Approach</span>
-    <h2 class="statement">Embedded, not external. Expertise, not theory. Your cadence, not ours.</h2>
+    <h2 class="statement">{approach.data.tagline}</h2>
 
     <div class="approach__split">
       <div class="approach__col">
-        <p>Every family office is carrying more than it used to: succession, governance, a generational handover in progress, a regulatory shift that lands without warning. The volume itself is the problem as much as any single issue inside it.</p>
-        <p>We work inside the family office, not outside it. No decks lobbed over the fence, no frameworks left behind for someone else to run. We sit with your team and do the work alongside them, lending expertise rather than adding another voice to manage.</p>
-        <p>That holds whatever is moving through the landscape at the time. Right now AI is one of the things moving fastest, and we are not an AI practice because of it. We help families decide what to adopt, what to resist and what to govern, whether the subject is succession, structure or, currently, AI.</p>
+        {approach.data.paragraphs.map((p) => <p>{p}</p>)}
       </div>
-      <Plate ratio="4 / 5" src="/material.jpg" alt="An architectural oak joinery detail in raking light" label="Photograph · material" note="A single architectural detail, stone or oak, raking light across the surface. Material, craft, permanence. Restrained and close." spec="1100 × 1375" />
+      <Plate ratio="4 / 5" src={approach.data.photo} alt="An architectural oak joinery detail in raking light" label="Photograph · material" note="A single architectural detail, stone or oak, raking light across the surface. Material, craft, permanence. Restrained and close." spec="1100 × 1375" />
     </div>
 
     <div class="approach__verdict">
       <div class="gold-rule" style="margin-bottom:24px"></div>
-      <p>We are not consultants who present. We are trusted because of years inside the nuance and cadence of family offices, not because we claim it.</p>
+      <p>{approach.data.verdict}</p>
     </div>
   </section>
 
   <!-- PARTNERS -->
   <section id="partners" class="section">
-    <span class="kicker" style="margin-bottom:56px">Partners</span>
+    <span class="kicker" style="margin-bottom:32px">Partners</span>
+    <p class="partners__intro">{partnersSection.data.intro}</p>
     <div class="partners">
       <div class="partner">
         <div class="partner__head">
-          <img src="/tom-rutherford.jpg" alt="Tom Rutherford" class="partner__img" />
+          <img src={tom.data.photo} alt={tom.data.name} class="partner__img" />
           <div>
-            <p class="partner__name">Tom Rutherford</p>
-            <p class="partner__role">Family Office and Trust Advisor</p>
+            <p class="partner__name">{tom.data.name}</p>
+            <p class="partner__role">{tom.data.role}</p>
           </div>
         </div>
         <div class="partner__bio">
-          <p>Nearly thirty years advising family offices and international trusts. Formed LOTUC Consulting in 2018 recognising the need for strategic advice incorporating sustainability alongside traditional frameworks.</p>
-          <p>JPMorgan Private Bank, managing director leading charities and international manager due diligence team. Previous portfolio management experience at Lombard Odier and Robert Fleming &amp; Co.</p>
+          {tom.data.bio.map((p) => <p>{p}</p>)}
         </div>
       </div>
       <div class="partner partner--last">
         <div class="partner__head">
-          <img src="/shaan-mahrotri.jpg" alt="Shaan Mahrotri" class="partner__img" />
+          <img src={shaan.data.photo} alt={shaan.data.name} class="partner__img" />
           <div>
-            <p class="partner__name">Shaan Mahrotri</p>
-            <p class="partner__role">Strategic Advisor and Investor</p>
+            <p class="partner__name">{shaan.data.name}</p>
+            <p class="partner__role">{shaan.data.role}</p>
           </div>
         </div>
         <div class="partner__bio">
-          <p>Accomplished operational advisor to investment houses, family offices, and UHNW individuals with over 25 years of expertise across diverse industries and geographies.</p>
-          <p>Bridges strategy and execution through deep commercial expertise and extensive global network. Trusted advisor to principals and hands-on operator with portfolio companies, focusing on driving innovation and growth.</p>
+          {shaan.data.bio.map((p) => <p>{p}</p>)}
         </div>
       </div>
+    </div>
+
+    <div class="partners__closing">
+      <div class="gold-rule" style="margin-bottom:24px"></div>
+      <p>{partnersSection.data.closing}</p>
     </div>
   </section>
 
   <!-- INSIGHTS SUMMARY -->
-  <section id="insights" class="section insights-summary">
-    <div class="insights-summary__head">
-      <div>
-        <span class="kicker" style="margin-bottom:18px">Insights</span>
-        <h2 class="statement statement--tight">Writing on foundations, governance and the long work of family offices.</h2>
-      </div>
-      <a href="/insights" class="insights-summary__all">All insights →</a>
-    </div>
-
-    <div class="insights-summary__grid">
-      <a href={`/insights/${featured.slug}`} class="feature">
-        <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" />
-        <div class="feature__meta">
-          <span class="gold-tick"></span>
-          <span class="feature__topic">{featured.data.topic}</span>
+  {insightsEnabled && (
+    <section id="insights" class="section insights-summary">
+      <div class="insights-summary__head">
+        <div>
+          <span class="kicker" style="margin-bottom:18px">Insights</span>
+          <h2 class="statement statement--tight">Writing on foundations, governance and the long work of family offices.</h2>
         </div>
-        <h3 class="feature__title">{featured.data.title}</h3>
-        <p class="feature__byline">{featured.data.author} · {featured.data.read} · {featured.data.date}</p>
-      </a>
-
-      <div class="summary-list">
-        {summary.map((a) => (
-          <a href={`/insights/${a.slug}`} class="summary-row">
-            <div class="microlabel" style="margin-bottom:10px">{a.data.topic}</div>
-            <h4 class="summary-row__title">{a.data.title}</h4>
-            <p class="summary-row__meta">{a.data.author} · {a.data.date}</p>
-          </a>
-        ))}
+        <a href="/insights" class="insights-summary__all">All insights →</a>
       </div>
-    </div>
-  </section>
+
+      <div class="insights-summary__grid">
+        <a href={`/insights/${featured.slug}`} class="feature">
+          <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" />
+          <div class="feature__meta">
+            <span class="gold-tick"></span>
+            <span class="feature__topic">{featured.data.topic}</span>
+          </div>
+          <h3 class="feature__title">{featured.data.title}</h3>
+          <p class="feature__byline">{featured.data.author} · {featured.data.read} · {featured.data.date}</p>
+        </a>
+
+        <div class="summary-list">
+          {summary.map((a) => (
+            <a href={`/insights/${a.slug}`} class="summary-row">
+              <div class="microlabel" style="margin-bottom:10px">{a.data.topic}</div>
+              <h4 class="summary-row__title">{a.data.title}</h4>
+              <p class="summary-row__meta">{a.data.author} · {a.data.date}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- CONTACT -->
   <section id="contact" class="section">
     <span class="kicker" style="margin-bottom:40px">Contact</span>
     <div class="contact">
-      <p class="contact__lead">We work with a small number of families at any one time. If you would like to explore whether we are the right fit, the best first step is a conversation.</p>
+      <p class="contact__lead">{contact.data.lead}</p>
       <div class="contact__row">
-        <span class="contact__name">Tom Rutherford</span>
-        <a href="mailto:tom@valorapartners.co.uk" class="contact__mail">tom@valorapartners.co.uk</a>
+        <span class="contact__name">{tom.data.name}</span>
+        <a href={`mailto:${tom.data.email}`} class="contact__mail">{tom.data.email}</a>
       </div>
       <div class="contact__row">
-        <span class="contact__name">Shaan Mahrotri</span>
-        <a href="mailto:shaan@valorapartners.co.uk" class="contact__mail">shaan@valorapartners.co.uk</a>
+        <span class="contact__name">{shaan.data.name}</span>
+        <a href={`mailto:${shaan.data.email}`} class="contact__mail">{shaan.data.email}</a>
       </div>
     </div>
   </section>
@@ -157,6 +173,7 @@ const summary = insights.slice(1, 4);
 
   .microlabel { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
 
+  .partners__intro { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; max-width: 560px; margin-bottom: 56px; }
   .partners { display: flex; flex-direction: column; max-width: 600px; }
   .partner { padding-bottom: 52px; margin-bottom: 52px; border-bottom: 1px solid var(--divider); }
   .partner--last { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
@@ -166,6 +183,9 @@ const summary = insights.slice(1, 4);
   .partner__role { font-size: 11px; font-weight: 700; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; }
   .partner__bio { font-size: 15px; font-weight: 300; color: var(--muted); line-height: 1.9; }
   .partner__bio p + p { margin-top: 14px; }
+
+  .partners__closing { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); max-width: 600px; }
+  .partners__closing p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
 
   .insights-summary { background: var(--paper); }
   .insights-summary__head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 48px; }
