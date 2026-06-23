@@ -1,0 +1,48 @@
+{
+  "skill_name": "insight-article",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add this as an insight on the site, this one's mine (Tom): [family office reporting cadence article, plain prose, no image, no explicit topic/date]",
+      "expected_output": "A new .md file in src/content/insights/ with author Tom Rutherford (role/image auto-filled from the known lookup), an inferred title/topic/excerpt/leadCaption, real word-count-based reading time, no image (leadImage omitted), one pull-quote and one subheading added to the plain-prose body, and order/featured renumbered across all six articles.",
+      "files": [],
+      "expectations": [
+        "Article frontmatter sets author to 'Tom Rutherford', role to 'Family Office and Trust Advisor', and authorImg to '/tom-rutherford.jpg'",
+        "The read field reflects the real word count of the body at roughly 225 words/minute, not a stylized or copied guess",
+        "The body contains exactly one '### ' subheading",
+        "The body contains exactly one '> ' pull-quote, and its text does not appear verbatim elsewhere in the body",
+        "The body contains no markdown bold ('**') or italic emphasis markup",
+        "Across all article files, the order field forms a gapless sequence starting at 1 with no duplicates",
+        "Exactly one article file has featured: true, and it is the one with order: 1",
+        "All required frontmatter fields from src/content/config.ts are present with correct types"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "here's a draft from shaan, can you get this onto the insights page. pasted from google docs so formatting might be a bit off. also attaching a photo for the lead image. [AI stack article with bold, H1 title, and a 3-item bullet list, plus an image attachment]",
+      "expected_output": "A new .md file with author Shaan Mahrotri, the supplied image placed in /public under the article's slug and set as leadImage, bold markup stripped from the body, the 3-item bullet list folded into flowing prose, the H1-style '# Why most...' heading treated as the title rather than rendered as a body heading, plus the usual frontmatter inference and order/featured renumbering.",
+      "files": ["test-fixtures/sample-lead-image.jpg"],
+      "expectations": [
+        "Article frontmatter sets author to 'Shaan Mahrotri', role to 'Strategic Advisor and Investor', and authorImg to '/shaan-mahrotri.jpg'",
+        "The body contains no '**bold**' or '*italic*' markdown markup carried over from the source",
+        "The source's leading '# ' H1 line is used as the frontmatter title and does not also appear as a heading inside the body",
+        "The source's 3-item bullet list is folded into flowing prose rather than left as an unstyled markdown list",
+        "The attached image is placed under /public and the frontmatter leadImage field points at its actual path",
+        "Order/featured are renumbered across all existing articles consistently with the new article's position"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Got a longer one for the site, this should be dated August 2026. No author name in the draft itself, it's one of ours (Valora) — figure out who from context if you can, otherwise ask me. [co-investment diligence article, ~450 words, contains a 6-item diligence checklist embedded in a paragraph]",
+      "expected_output": "A new .md file with date 'August 2026' / dateShort 'Aug 26' taken from the user's explicit instruction, the skill either asking who the author is or making a reasonable Valora-context inference (flagged as a guess), a longer reading time reflecting the real ~450-word body, and the six-item diligence checklist flagged to the user as a structurally important list rather than silently folded or silently left as an unstyled list.",
+      "files": [],
+      "expectations": [
+        "Frontmatter date is 'August 2026' and dateShort is 'Aug 26', matching the user's explicit instruction rather than defaulting to the current month",
+        "Since no byline was given, the output explicitly flags the chosen author as an assumption/guess to confirm, rather than stating it as settled fact",
+        "The 6-item diligence checklist is explicitly flagged to the user as a judgment call (list vs. prose) rather than silently converted either way",
+        "The read field reflects the real word count of the body at roughly 225 words/minute, not a heuristic like 'longer than existing articles so use a bigger number'",
+        "The body contains at most one '### ' subheading unless a second is explicitly justified by two genuinely distinct argumentative turns"
+      ]
+    }
+  ]
+}
