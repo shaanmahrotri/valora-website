@@ -47,7 +47,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
         <h2 class="statement">{approach.data.tagline}</h2>
         {approach.data.paragraphs.map((p) => <p>{p}</p>)}
       </div>
-      <Plate ratio="9 / 20" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2000" />
+      <Plate ratio="9 / 22" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2200" />
     </div>
 
     <div class="approach__verdict">
@@ -219,5 +219,9 @@ const partnersSection = await getEntry('partnersSection', 'index');
     .hero, .approach__split, .insights-summary__grid { grid-template-columns: 1fr; gap: 40px; }
     .hero { min-height: 0; }
     .hero__plate { min-height: 360px; }
+    /* 9/22 is a tall side-panel ratio sized for sitting next to the
+       desktop text column - at full mobile width that becomes an
+       enormous image, so swap to a normal portrait crop here instead. */
+    #approach :global(.plate) { aspect-ratio: 4 / 5 !important; }
   }
 </style>
