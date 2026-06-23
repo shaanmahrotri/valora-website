@@ -107,11 +107,6 @@ immune to that whole failure class.
   running `npm run cms` locally first. Scoped and commented inline in
   `config.yml` already; nobody has built or tested it yet. Planned to
   start in a fresh session.
-- **Legal page placeholders.** `privacy.yaml` and `terms.yaml` still carry
-  literal `[COMPANY TYPE]` / `[PLACEHOLDER]` text for company number and
-  registered office - editable from the admin's "Legal pages" section once
-  the real values are confirmed. Must be filled in before production
-  launch, not required for staging review.
 - **Production launch decision.** No decision yet on if/when `astro-rebuild`
   becomes the real production site - see the permanent-staging note above.
 
