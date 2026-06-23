@@ -13,7 +13,10 @@ below is a different, unrelated system.
 - Content lives in `src/content/` as Astro content collections, schema in
   `src/content/config.ts`.
 - Git branch `astro-rebuild` is the active branch. It's staged on Netlify as
-  a **branch deploy**, separate from whatever production currently is.
+  a **branch deploy**, separate from whatever production currently is. This
+  is intentionally a **permanent pre-production staging site**, not a
+  temporary branch to be merged away once production launches - it stays
+  the place to review changes before they go live, indefinitely.
 
 ## Content architecture
 
@@ -38,6 +41,14 @@ below is a different, unrelated system.
   mobile), the homepage's "Latest insights" block, and every article route
   - leaving a clean `noindex` redirect at `/insights`. Independent of the
   per-article toggle above.
+- `legal` - one flat YAML file per legal page at
+  `src/content/legal/<slug>.yaml` (`privacy`, `cookies`, `terms`,
+  `disclaimer`). Each is `{ title, lastUpdated, sections: [{ heading,
+  paragraphs: [...] }] }`. Paragraphs are rendered with `set:html` in the
+  page templates (`src/pages/privacy.astro` etc.), so they're authored as
+  raw HTML, not escaped text or markdown - several already contain inline
+  `<a href="...">` links and `<br>` line breaks that need to render as
+  real markup.
 
 ## Local CMS (Decap)
 
@@ -50,9 +61,8 @@ touching code:
   (deliberately avoided - see "Why not Keystatic" below).
 - Config: `public/admin/config.yml`.
 - Backend is Decap's `proxy` mode via `decap-server` - edits write straight
-  to local files, no GitHub/Netlify auth needed for local use. (A hosted
-  `git-gateway` + Netlify Identity setup is possible later if browser-based
-  editing without a local server is ever wanted - not built yet.)
+  to local files, no GitHub/Netlify auth needed for local use. (Hosted
+  editing without a local server is the Stage B roadmap item below.)
 
 **To run it:** `npm run cms` starts both the dev server and the local
 proxy together - no need to run `npx decap-server` separately.
@@ -65,6 +75,17 @@ Local edits only ever touch files on this machine. They do **not** appear
 on the Netlify staging URL until committed and pushed - there's no
 auto-deploy hook from local edits.
 
+**Slug/filename safety, confirmed from Decap's own source
+(`decap-cms-core/src/backend.ts`, `persistEntry`):** editing any field on an
+*existing* entry - including the title - never recomputes its slug or
+renames its file. The slug is only ever computed once, at creation, from
+a `newRecord` flag; existing entries reuse the path/slug already stored on
+them regardless of what changes. The one real risk is renaming or moving
+content files manually (Finder, terminal) while the admin has that
+collection loaded - it trusts what it already loaded, not a fresh disk
+scan - so refresh the collection list in the admin after any external file
+change before editing that entry again.
+
 ### Why not Keystatic
 
 Tried first; rejected. It needs `output: 'hybrid'` + `@astrojs/react`
@@ -76,6 +97,23 @@ unrelated to any real file content, reproduced across two `@astrojs/react`
 majors. Decap's admin page is a plain static page with a vanilla script tag
 - it never asks Astro to render a framework component, so it's structurally
 immune to that whole failure class.
+
+## Roadmap - not yet built
+
+- **Hosted CMS ("Stage B").** Swap `public/admin/config.yml`'s `backend`
+  from `proxy` to `git-gateway` (branch `main` or whichever is live), set
+  up Netlify Identity on the site, and invite the editor as a user. This
+  is the only change needed to let editing happen from any browser without
+  running `npm run cms` locally first. Scoped and commented inline in
+  `config.yml` already; nobody has built or tested it yet. Planned to
+  start in a fresh session.
+- **Legal page placeholders.** `privacy.yaml` and `terms.yaml` still carry
+  literal `[COMPANY TYPE]` / `[PLACEHOLDER]` text for company number and
+  registered office - editable from the admin's "Legal pages" section once
+  the real values are confirmed. Must be filled in before production
+  launch, not required for staging review.
+- **Production launch decision.** No decision yet on if/when `astro-rebuild`
+  becomes the real production site - see the permanent-staging note above.
 
 ## Visual design (site)
 
