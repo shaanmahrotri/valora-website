@@ -41,10 +41,10 @@ const partnersSection = await getEntry('partnersSection', 'index');
   <!-- APPROACH -->
   <section id="approach" class="section">
     <span class="kicker" style="margin-bottom:32px">Approach</span>
-    <h2 class="statement">{approach.data.tagline}</h2>
 
     <div class="approach__split">
       <div class="approach__col">
+        <h2 class="statement">{approach.data.tagline}</h2>
         {approach.data.paragraphs.map((p) => <p>{p}</p>)}
       </div>
       <Plate ratio="9 / 20" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2000" />
@@ -167,6 +167,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   .approach__split { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr); gap: 72px; align-items: end; }
   .approach__col { max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+  .approach__col .statement { max-width: none; margin-bottom: 8px; }
   .approach__col p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
   .approach__verdict { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); max-width: 40em; }
   .approach__verdict p { font-size: 22px; font-weight: 300; color: var(--ink); line-height: 1.5; letter-spacing: -0.2px; }
