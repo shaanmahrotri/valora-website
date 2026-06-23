@@ -49,7 +49,15 @@ const latest = insightsEnabled
       <a href="/#contact" class:list={["nav__link", { 'nav__link--active': active === 'contact' }]}>Contact</a>
     </nav>
   </div>
-  <p class="panel__copy">© Valora 2026</p>
+  <div class="panel__foot">
+    <p class="panel__copy">© Valora 2026</p>
+    <nav class="panel__legal">
+      <a href="/privacy" class="panel__legal-link">Privacy</a>
+      <a href="/cookies" class="panel__legal-link">Cookies</a>
+      <a href="/terms" class="panel__legal-link">Terms</a>
+      <a href="/disclaimer" class="panel__legal-link">Disclaimer</a>
+    </nav>
+  </div>
 </aside>
 
 <style>
@@ -132,5 +140,18 @@ const latest = insightsEnabled
   .ins__all { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-deep); margin-top: 2px; }
   .ins__all:hover { color: var(--ink); }
 
-  .panel__copy { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; color: var(--muted); opacity: 0.55; margin-top: 40px; }
+  .panel__foot { margin-top: 40px; }
+  .panel__copy { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; color: var(--muted); opacity: 0.55; margin-bottom: 12px; }
+  .panel__legal { display: flex; flex-direction: column; gap: 8px; }
+  .panel__legal-link {
+    align-self: flex-start;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    opacity: 0.6;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .panel__legal-link:hover { opacity: 1; color: var(--ink); }
 </style>

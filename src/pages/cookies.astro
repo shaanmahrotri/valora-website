@@ -1,0 +1,116 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Cookie Policy — Valora" description="How valorapartners.co.uk uses cookies.">
+
+  <div class="legal">
+
+    <a href="/" class="back">← Back to main</a>
+
+    <header class="legal__head">
+      <span class="kicker" style="margin-bottom:20px">Legal</span>
+      <div class="gold-rule" style="margin-bottom:32px"></div>
+      <h1 class="legal__title">Cookie Policy</h1>
+      <p class="legal__date">Last updated: 23 June 2026</p>
+    </header>
+
+    <div class="legal__body">
+
+      <section class="legal__section">
+        <h2>What are cookies</h2>
+        <p>Cookies are small text files placed on your device by a website. They are widely used to make websites function correctly and to provide information to website owners.</p>
+      </section>
+
+      <section class="legal__section">
+        <h2>Cookies we use</h2>
+        <p>This website currently uses strictly necessary cookies only. These are cookies required for the website to function and cannot be switched off. They do not track you across other sites and do not store any personally identifiable information.</p>
+        <p>We do not currently use analytics, advertising or tracking cookies.</p>
+      </section>
+
+      <section class="legal__section">
+        <h2>Managing cookies</h2>
+        <p>You can set your browser to block or alert you to all cookies. If you block strictly necessary cookies, parts of the site may not work as intended. Most browsers include cookie controls in their settings or privacy menus.</p>
+        <p>For more information about cookies and how to manage them, visit <a href="https://ico.org.uk/for-the-public/online/cookies" class="legal__link" target="_blank" rel="noopener">ico.org.uk/for-the-public/online/cookies</a>.</p>
+      </section>
+
+      <section class="legal__section">
+        <h2>Changes to this policy</h2>
+        <p>If we introduce analytics or other non-essential cookies in future, we will update this policy and present a consent banner before placing those cookies on your device.</p>
+      </section>
+
+    </div>
+
+    <nav class="legal__footer">
+      <a href="/privacy">Privacy Policy</a>
+      <span class="legal__footer-sep"></span>
+      <a href="/terms">Terms of Use</a>
+      <span class="legal__footer-sep"></span>
+      <a href="/disclaimer">Disclaimer</a>
+    </nav>
+
+  </div>
+
+</Base>
+
+<style>
+  .legal { padding: 80px var(--pad) 104px; max-width: 680px; }
+
+  .back {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--faint-alt);
+    margin-bottom: 56px;
+    transition: color 0.15s;
+  }
+  .back:hover { color: var(--ink); }
+
+  .legal__head { margin-bottom: 52px; }
+  .legal__title { font-size: 42px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 14px; }
+  .legal__date { font-size: 13px; font-weight: 400; color: var(--faint); letter-spacing: 0.04em; }
+
+  .legal__section { padding: 32px 0; border-top: 1px solid var(--divider); }
+  .legal__section h2 {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .legal__section p {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+  .legal__section p + p { margin-top: 14px; }
+  .legal__link {
+    color: var(--ink);
+    border-bottom: 1px solid var(--divider);
+    padding-bottom: 1px;
+    transition: border-color 0.15s;
+  }
+  .legal__link:hover { border-color: var(--gold); }
+
+  .legal__footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--divider);
+  }
+  .legal__footer a {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--faint-alt);
+    transition: color 0.15s;
+  }
+  .legal__footer a:hover { color: var(--ink); }
+  .legal__footer-sep { width: 1px; height: 12px; background: var(--divider); }
+</style>
