@@ -1,5 +1,8 @@
 ---
+import { getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+
+const page = await getEntry('legal', 'privacy');
 ---
 <Base title="Privacy Policy — Valora" description="How Valora Partners handles personal data in connection with this website.">
 
@@ -10,48 +13,17 @@ import Base from '../layouts/Base.astro';
     <header class="legal__head">
       <span class="kicker" style="margin-bottom:20px">Legal</span>
       <div class="gold-rule" style="margin-bottom:32px"></div>
-      <h1 class="legal__title">Privacy Policy</h1>
-      <p class="legal__date">Last updated: 23 June 2026</p>
+      <h1 class="legal__title">{page.data.title}</h1>
+      <p class="legal__date">Last updated: {page.data.lastUpdated}</p>
     </header>
 
     <div class="legal__body">
-
-      <section class="legal__section">
-        <h2>Who we are</h2>
-        <p>Valora Partners [COMPANY TYPE]<br>
-        Registered in England and Wales<br>
-        Company number: [PLACEHOLDER]<br>
-        Registered office: [PLACEHOLDER]<br>
-        Contact: <a href="mailto:shaan@valorapartners.co.uk" class="legal__link">shaan@valorapartners.co.uk</a></p>
-        <p>We are the data controller for the purposes of UK GDPR.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>What data we collect</h2>
-        <p>This website does not currently use contact forms, account registration or analytics tracking. We do not collect personal data through the website at this time.</p>
-        <p>If you contact us directly by email, we will hold your name and email address for the purpose of responding to your enquiry. We will not use this information for any other purpose or share it with third parties without your consent.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Cookies</h2>
-        <p>We use strictly necessary cookies only. See our <a href="/cookies" class="legal__link">Cookie Policy</a> for details.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Your rights</h2>
-        <p>Under UK GDPR you have the right to access, correct or request deletion of any personal data we hold about you. To exercise any of these rights, contact us at <a href="mailto:shaan@valorapartners.co.uk" class="legal__link">shaan@valorapartners.co.uk</a>.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Changes to this policy</h2>
-        <p>We may update this policy from time to time. The date at the top of this page reflects the most recent revision.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Complaints</h2>
-        <p>If you are unhappy with how we handle your data, you have the right to complain to the Information Commissioner's Office at <a href="https://ico.org.uk" class="legal__link" target="_blank" rel="noopener">ico.org.uk</a>.</p>
-      </section>
-
+      {page.data.sections.map((section) => (
+        <section class="legal__section">
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((p) => <p set:html={p} />)}
+        </section>
+      ))}
     </div>
 
     <nav class="legal__footer">

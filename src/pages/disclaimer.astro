@@ -1,5 +1,8 @@
 ---
+import { getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+
+const page = await getEntry('legal', 'disclaimer');
 ---
 <Base title="Disclaimer — Valora" description="Important notices regarding the content of this website.">
 
@@ -10,42 +13,17 @@ import Base from '../layouts/Base.astro';
     <header class="legal__head">
       <span class="kicker" style="margin-bottom:20px">Legal</span>
       <div class="gold-rule" style="margin-bottom:32px"></div>
-      <h1 class="legal__title">Disclaimer</h1>
-      <p class="legal__date">Last updated: 23 June 2026</p>
+      <h1 class="legal__title">{page.data.title}</h1>
+      <p class="legal__date">Last updated: {page.data.lastUpdated}</p>
     </header>
 
     <div class="legal__body">
-
-      <section class="legal__section">
-        <h2>General information only</h2>
-        <p>The content of this website is provided for general information purposes only. It does not constitute advice of any kind and should not be relied upon as the basis for any decision or action.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Not financial advice</h2>
-        <p>Valora Partners is not authorised or regulated by the Financial Conduct Authority (FCA). Nothing on this website constitutes investment advice, a personal recommendation or an offer to buy or sell any investment. If you require regulated financial advice, you should consult an FCA-authorised firm.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Not legal advice</h2>
-        <p>Nothing on this website constitutes legal advice. If you require legal advice, you should consult a qualified solicitor.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>No liability</h2>
-        <p>While we take care to ensure the information on this website is accurate and up to date, we make no warranty as to its accuracy or completeness. We accept no liability for any loss or damage arising from reliance on any content on this site.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Client work</h2>
-        <p>Our advisory work with clients is conducted under separate engagement terms and is subject to confidentiality obligations. Content on this website is not representative of any specific client situation or engagement.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Contact</h2>
-        <p>If you have any questions about this disclaimer, contact us at <a href="mailto:shaan@valorapartners.co.uk" class="legal__link">shaan@valorapartners.co.uk</a>.</p>
-      </section>
-
+      {page.data.sections.map((section) => (
+        <section class="legal__section">
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((p) => <p set:html={p} />)}
+        </section>
+      ))}
     </div>
 
     <nav class="legal__footer">

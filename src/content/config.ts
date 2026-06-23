@@ -83,4 +83,20 @@ const partnersSection = defineCollection({
   }),
 });
 
-export const collections = { insights, hero, approach, contact, partners, partnersSection, settings };
+// One YAML file per legal page, flat in src/content/legal/<slug>.yaml.
+// Paragraphs may contain inline HTML (links, <br>) - rendered with
+// set:html in the page templates, so it's authored as raw HTML, not
+// escaped text or markdown.
+const legal = defineCollection({
+  type: 'data',
+  schema: z.object({
+    title: z.string(),
+    lastUpdated: z.string(),
+    sections: z.array(z.object({
+      heading: z.string(),
+      paragraphs: z.array(z.string()),
+    })),
+  }),
+});
+
+export const collections = { insights, hero, approach, contact, partners, partnersSection, settings, legal };

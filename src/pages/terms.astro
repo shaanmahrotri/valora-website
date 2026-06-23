@@ -1,5 +1,8 @@
 ---
+import { getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
+
+const page = await getEntry('legal', 'terms');
 ---
 <Base title="Terms of Use — Valora" description="Terms governing your use of valorapartners.co.uk.">
 
@@ -10,53 +13,17 @@ import Base from '../layouts/Base.astro';
     <header class="legal__head">
       <span class="kicker" style="margin-bottom:20px">Legal</span>
       <div class="gold-rule" style="margin-bottom:32px"></div>
-      <h1 class="legal__title">Terms of Use</h1>
-      <p class="legal__date">Last updated: 23 June 2026</p>
+      <h1 class="legal__title">{page.data.title}</h1>
+      <p class="legal__date">Last updated: {page.data.lastUpdated}</p>
     </header>
 
     <div class="legal__body">
-
-      <section class="legal__section">
-        <h2>About us</h2>
-        <p>This website is operated by Valora Partners [COMPANY TYPE], registered in England and Wales (company number [PLACEHOLDER]), registered office [PLACEHOLDER].</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Use of this website</h2>
-        <p>You may access and browse this website for your own personal, non-commercial use. You must not copy, reproduce, distribute or otherwise exploit any content on this site without our prior written consent.</p>
-        <p>You must not use this website in any way that is unlawful, harmful or disruptive, or that infringes the rights of any third party.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Intellectual property</h2>
-        <p>All content on this website, including text, design, graphics and structure, is the intellectual property of Valora Partners or is used with permission. All rights are reserved.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>No warranties</h2>
-        <p>This website is provided on an "as is" basis. We make no representations or warranties of any kind regarding its accuracy, completeness or fitness for any particular purpose. We reserve the right to make changes to the site and its content at any time without notice.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Limitation of liability</h2>
-        <p>To the fullest extent permitted by law, Valora Partners will not be liable for any loss or damage arising from your use of or inability to use this website, or from any content on it.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Third party links</h2>
-        <p>This website may contain links to third party websites. These links are provided for convenience only. We have no control over third party sites and accept no responsibility for their content or practices.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Governing law</h2>
-        <p>These terms are governed by and construed in accordance with the laws of England and Wales. Any disputes arising from your use of this website will be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
-      </section>
-
-      <section class="legal__section">
-        <h2>Changes to these terms</h2>
-        <p>We may update these terms from time to time. Continued use of the website following any changes constitutes your acceptance of the revised terms.</p>
-      </section>
-
+      {page.data.sections.map((section) => (
+        <section class="legal__section">
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((p) => <p set:html={p} />)}
+        </section>
+      ))}
     </div>
 
     <nav class="legal__footer">

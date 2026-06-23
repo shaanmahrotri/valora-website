@@ -79,6 +79,41 @@ collections:
         widget: list
         field: { name: paragraph, label: Paragraph, widget: text }
 
+  - name: legal
+    label: "Legal pages"
+    files:
+      - name: privacy
+        label: "Privacy Policy"
+        file: src/content/legal/privacy.yaml
+        fields: &legal_fields
+          - { name: title, label: Title, widget: string }
+          - { name: lastUpdated, label: "Last updated (shown on the page)", widget: string }
+          - name: sections
+            label: Sections
+            widget: list
+            summary: "{{fields.heading}}"
+            fields:
+              - { name: heading, label: Heading, widget: string }
+              - name: paragraphs
+                label: Paragraphs
+                widget: list
+                field: { name: paragraph, label: "Paragraph (HTML allowed, e.g. an <a href=\"...\">link</a> or <br> line break)", widget: text }
+
+      - name: cookies
+        label: "Cookie Policy"
+        file: src/content/legal/cookies.yaml
+        fields: *legal_fields
+
+      - name: terms
+        label: "Terms of Use"
+        file: src/content/legal/terms.yaml
+        fields: *legal_fields
+
+      - name: disclaimer
+        label: "Disclaimer"
+        file: src/content/legal/disclaimer.yaml
+        fields: *legal_fields
+
   - name: insights
     label: Insights
     folder: src/content/insights
