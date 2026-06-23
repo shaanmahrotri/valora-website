@@ -43,11 +43,11 @@ const partnersSection = await getEntry('partnersSection', 'index');
     <span class="kicker" style="margin-bottom:32px">Approach</span>
 
     <div class="approach__split">
+      <Plate ratio="9 / 22" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2200" />
       <div class="approach__col">
         <h2 class="statement">{approach.data.tagline}</h2>
         {approach.data.paragraphs.map((p) => <p>{p}</p>)}
       </div>
-      <Plate ratio="9 / 22" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2200" />
     </div>
 
     <div class="approach__verdict">
@@ -73,7 +73,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
           {tom.data.bio.map((p) => <p>{p}</p>)}
         </div>
       </div>
-      <div class="partner partner--last">
+      <div class="partner">
         <div class="partner__head">
           <img src={shaan.data.photo} alt={shaan.data.name} class="partner__img" />
           <div>
@@ -165,19 +165,20 @@ const partnersSection = await getEntry('partnersSection', 'index');
   .statement { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.32; letter-spacing: -0.3px; max-width: 18em; margin-bottom: 64px; }
   .statement--tight { font-size: 30px; max-width: 16em; margin-bottom: 0; }
 
-  .approach__split { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr); gap: 72px; align-items: end; }
+  .approach__split { display: grid; grid-template-columns: minmax(0,0.95fr) minmax(0,1.05fr); gap: 72px; align-items: end; }
   .approach__col { max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
   .approach__col .statement { max-width: none; margin-bottom: 8px; }
   .approach__col p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
-  .approach__verdict { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); max-width: 40em; }
-  .approach__verdict p { font-size: 22px; font-weight: 300; color: var(--ink); line-height: 1.5; letter-spacing: -0.2px; }
+  .approach__verdict { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); text-align: center; }
+  .approach__verdict .gold-rule { margin: 0 auto 24px; }
+  .approach__verdict p { font-size: 22px; font-weight: 300; color: var(--ink); line-height: 1.5; letter-spacing: -0.2px; max-width: 44em; margin: 0 auto; }
 
   .microlabel { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
 
   .partners__intro { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; max-width: 560px; margin-bottom: 56px; }
-  .partners { display: flex; flex-direction: column; max-width: 600px; }
-  .partner { padding-bottom: 52px; margin-bottom: 52px; border-bottom: 1px solid var(--divider); }
-  .partner--last { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
+  .partners { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--divider); }
+  .partner { padding: 52px 56px 52px 0; border-right: 1px solid var(--divider); }
+  .partner:last-child { padding: 52px 0 52px 56px; border-right: none; }
   .partner__head { display: flex; align-items: center; gap: 28px; margin-bottom: 24px; }
   .partner__img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .partner__name { font-size: 16px; font-weight: 400; letter-spacing: 0.2em; color: var(--ink); text-transform: uppercase; margin-bottom: 8px; }
@@ -219,9 +220,12 @@ const partnersSection = await getEntry('partnersSection', 'index');
     .hero, .approach__split, .insights-summary__grid { grid-template-columns: 1fr; gap: 40px; }
     .hero { min-height: 0; }
     .hero__plate { min-height: 360px; }
-    /* 9/22 is a tall side-panel ratio sized for sitting next to the
-       desktop text column - at full mobile width that becomes an
-       enormous image, so swap to a normal portrait crop here instead. */
-    #approach :global(.plate) { aspect-ratio: 4 / 5 !important; }
+    /* text first on mobile — image drops below */
+    .approach__split :global(.plate) { order: 2; aspect-ratio: 4 / 5 !important; }
+    .approach__col { order: 1; }
+    /* partners stack vertically on mobile */
+    .partners { grid-template-columns: 1fr; border-top: none; }
+    .partner { padding: 40px 0; border-right: none; border-top: 1px solid var(--divider); }
+    .partner:last-child { padding: 40px 0 0; }
   }
 </style>
