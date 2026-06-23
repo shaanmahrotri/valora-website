@@ -47,7 +47,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
       <div class="approach__col">
         {approach.data.paragraphs.map((p) => <p>{p}</p>)}
       </div>
-      <Plate ratio="9 / 20" src={approach.data.photo} alt="An architectural oak joinery detail in raking light" label="Photograph · material" note="A single architectural detail, stone or oak, raking light across the surface. Material, craft, permanence. Restrained and close." spec="900 × 2000" />
+      <Plate ratio="9 / 20" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2000" />
     </div>
 
     <div class="approach__verdict">
@@ -165,7 +165,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
   .statement { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.32; letter-spacing: -0.3px; max-width: 18em; margin-bottom: 64px; }
   .statement--tight { font-size: 30px; max-width: 16em; margin-bottom: 0; }
 
-  .approach__split { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr); gap: 72px; align-items: start; }
+  .approach__split { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr); gap: 72px; align-items: end; }
   .approach__col { max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
   .approach__col p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
   .approach__verdict { margin-top: 56px; padding-top: 36px; border-top: 1px solid var(--divider); max-width: 40em; }
