@@ -9,7 +9,7 @@ authorImg: "/tom-rutherford.jpg"
 read: "7 min read"
 date: "May 2026"
 dateShort: "May 26"
-order: 2
+order: 3
 featured: false
 leadCaption: "Two chairs at a window, one slightly turned toward the other. Continuity, patience, the long conversation."
 ---

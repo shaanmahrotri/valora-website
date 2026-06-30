@@ -9,8 +9,8 @@ authorImg: "/shaan-mahrotri.jpg"
 read: "9 min read"
 date: "June 2026"
 dateShort: "Jun 26"
-order: 1
-featured: true
+order: 2
+featured: false
 leadCaption: "A handwritten one-page statement of family values on a desk, fountain pen beside it. Intention before instrument."
 ---
 

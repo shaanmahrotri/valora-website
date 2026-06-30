@@ -44,7 +44,7 @@ const d = entry.data;
       </div>
       <h1 class="head__title">{d.title}</h1>
       <div class="head__meta">
-        <span class="byline"><img src={d.authorImg} alt={d.author} /> {d.author}</span>
+        <span class="byline"><img src={d.authorImg} alt={d.author} width="30" height="30" /> {d.author}</span>
         <span class="dot"></span>
         <span class="muted">{d.read}</span>
         <span class="dot"></span>
@@ -62,7 +62,7 @@ const d = entry.data;
       </div>
 
       <div class="author">
-        <img src={d.authorImg} alt={d.author} />
+        <img src={d.authorImg} alt={d.author} width="46" height="46" />
         <div>
           <div class="author__name">{d.author}</div>
           <div class="author__role">{d.role}</div>
@@ -104,7 +104,7 @@ const d = entry.data;
   .head > * { max-width: 760px; margin-left: auto; margin-right: auto; }
   .head__kicker { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 30px; font-size: 11px; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); }
   .tick { width: 24px; height: 2px; background: var(--gold); }
-  .head__title { font-size: 46px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.5px; text-align: center; }
+  .head__title { font-size: 46px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.5px; text-align: center; text-wrap: balance; }
   .head__meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; margin-top: 30px; }
   .byline { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: var(--ink); letter-spacing: 0.02em; }
   .byline img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }

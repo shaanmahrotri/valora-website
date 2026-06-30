@@ -20,6 +20,7 @@ const insightsEnabled = settings.data.insightsEnabled;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#E6DDD0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -29,6 +30,8 @@ const insightsEnabled = settings.data.insightsEnabled;
     <title>{title}</title>
   </head>
   <body>
+
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
     <!-- ── Mobile sticky header (hidden on desktop) ── -->
     <header class="mob-header">
@@ -40,7 +43,7 @@ const insightsEnabled = settings.data.insightsEnabled;
 
     <div class="shell">
       <LeftPanel active={active} />
-      <main class="content">
+      <main class="content" id="main-content">
         <slot />
       </main>
     </div>
@@ -55,19 +58,19 @@ const insightsEnabled = settings.data.insightsEnabled;
     <!-- ── Mobile bottom sheet (hidden on desktop) ── -->
     <div class="mob-sheet" id="mob-sheet" aria-hidden="true">
       <div class="mob-sheet__scrim" id="mob-scrim"></div>
-      <div class="mob-sheet__body" role="dialog" aria-label="Site navigation">
+      <div class="mob-sheet__body" role="dialog" aria-modal="true" aria-label="Site navigation">
         <div class="mob-sheet__handle"></div>
         <div class="mob-sheet__top">
           <span>Go to section</span>
           <button id="mob-close" aria-label="Close navigation">×</button>
         </div>
-        <a href="/#about"    class={`mob-sheet__item${active === 'about'     ? ' mob-sheet__item--active' : ''}`}><span>About</span><span class="mob-chev">›</span></a>
-        <a href="/#approach" class={`mob-sheet__item${active === 'approach'  ? ' mob-sheet__item--active' : ''}`}><span>Approach</span><span class="mob-chev">›</span></a>
-        <a href="/#partners" class={`mob-sheet__item${active === 'partners'  ? ' mob-sheet__item--active' : ''}`}><span>Partners</span><span class="mob-chev">›</span></a>
+        <a href="/#about"    class={`mob-sheet__item${active === 'about'     ? ' mob-sheet__item--active' : ''}`}><span>About</span><span class="mob-chev" aria-hidden="true">›</span></a>
+        <a href="/#approach" class={`mob-sheet__item${active === 'approach'  ? ' mob-sheet__item--active' : ''}`}><span>Approach</span><span class="mob-chev" aria-hidden="true">›</span></a>
+        <a href="/#partners" class={`mob-sheet__item${active === 'partners'  ? ' mob-sheet__item--active' : ''}`}><span>Partners</span><span class="mob-chev" aria-hidden="true">›</span></a>
         {insightsEnabled && (
-          <a href="/insights"  class={`mob-sheet__item mob-sheet__item--ins${active === 'insights' ? ' mob-sheet__item--active' : ''}`}><span>Insights</span><span class="mob-chev">›</span></a>
+          <a href="/insights"  class={`mob-sheet__item mob-sheet__item--ins${active === 'insights' ? ' mob-sheet__item--active' : ''}`}><span>Insights</span><span class="mob-chev" aria-hidden="true">›</span></a>
         )}
-        <a href="/#contact"  class={`mob-sheet__item mob-sheet__item--last${active === 'contact' ? ' mob-sheet__item--active' : ''}`}><span>Contact</span><span class="mob-chev">›</span></a>
+        <a href="/#contact"  class={`mob-sheet__item mob-sheet__item--last${active === 'contact' ? ' mob-sheet__item--active' : ''}`}><span>Contact</span><span class="mob-chev" aria-hidden="true">›</span></a>
         <div class="mob-sheet__legal">
           <a href="/privacy">Privacy</a>
           <span class="mob-sheet__legal-sep"></span>
@@ -85,18 +88,47 @@ const insightsEnabled = settings.data.insightsEnabled;
       const sheet = document.getElementById('mob-sheet');
       const scrim = document.getElementById('mob-scrim');
       const close = document.getElementById('mob-close');
+      const sheetBody = sheet?.querySelector('.mob-sheet__body');
+
+      function getFocusable(): HTMLElement[] {
+        return sheetBody ? Array.from(sheetBody.querySelectorAll('a[href], button')) : [];
+      }
+
+      function onKeydown(e: KeyboardEvent) {
+        if (e.key === 'Escape') {
+          closeSheet();
+          return;
+        }
+        if (e.key === 'Tab') {
+          const focusable = getFocusable();
+          if (!focusable.length) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
 
       function openSheet() {
         sheet?.classList.add('is-open');
         sheet?.setAttribute('aria-hidden', 'false');
         pill?.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeydown);
+        getFocusable()[0]?.focus();
       }
       function closeSheet() {
         sheet?.classList.remove('is-open');
         sheet?.setAttribute('aria-hidden', 'true');
         pill?.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
+        document.removeEventListener('keydown', onKeydown);
+        pill?.focus();
       }
 
       pill?.addEventListener('click', openSheet);
@@ -110,6 +142,25 @@ const insightsEnabled = settings.data.insightsEnabled;
 </html>
 
 <style>
+  /* ─── Skip link ──────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    z-index: 500;
+    background: var(--chrome);
+    color: #F4EFE6;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    transition: top 0.15s;
+  }
+  .skip-link:focus-visible {
+    top: 8px;
+  }
+
   /* ─── Mobile header ──────────────────────────────── */
   .mob-header {
     display: none;
@@ -210,6 +261,7 @@ const insightsEnabled = settings.data.insightsEnabled;
     border-radius: 28px 28px 0 0;
     box-shadow: 0 -24px 48px -22px rgba(20, 18, 12, 0.5);
     padding: 14px 0 44px;
+    overscroll-behavior: contain;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }

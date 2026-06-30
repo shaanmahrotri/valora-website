@@ -9,7 +9,7 @@ authorImg: "/shaan-mahrotri.jpg"
 read: "6 min read"
 date: "April 2026"
 dateShort: "Apr 26"
-order: 3
+order: 4
 featured: false
 leadCaption: "A desk with a single open ledger under a reading lamp. Scrutiny, attention, the close read."
 ---
