@@ -47,7 +47,7 @@ const rest = items.slice(1);
     <!-- FEATURED -->
     <a href={`/insights/${featured.slug}`} class="lead">
       <div class="lead__plate">
-        <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" />
+        <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" src={featured.data.leadImage} alt={featured.data.title} />
         <span class="lead__badge">Featured</span>
       </div>
       <div>
@@ -64,7 +64,7 @@ const rest = items.slice(1);
         <a href={`/insights/${a.slug}`} class="row"
            data-article data-search={`${a.data.title} ${a.data.topic} ${a.data.author}`.toLowerCase()} data-author={a.data.author}>
           <span class="row__num">{String(i + 2).padStart(2, '0')}</span>
-          <Plate ratio="5 / 4" />
+          <Plate ratio="5 / 4" src={a.data.leadImage} alt={a.data.title} />
           <div>
             <div class="microlabel" style="margin-bottom:10px">{a.data.topic}</div>
             <h4 class="row__title">{a.data.title}</h4>

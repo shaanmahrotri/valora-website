@@ -11,7 +11,8 @@ date: "June 2026"
 dateShort: "Jun 26"
 order: 1
 featured: true
-leadCaption: "A blank constitution page beside an unsigned pen, the question still unanswered."
+leadImage: "/what-a-family-office-is-for.jpg"
+leadCaption: "An open journal with blank pages and a fountain pen, lit by late sun. The question still unanswered."
 ---
 
 A sale completes, or a generation hands over, and within months there is a trust, an investment committee and a CFO with a proper title. The structure goes up fast. Lawyers draft the documents. A search firm fills the seats. Everyone involved can describe what the office now has.
