@@ -11,6 +11,7 @@ date: "July 2026"
 dateShort: "Jul 26"
 order: 1
 featured: true
+leadImage: "/ai-where-it-helps.jpg"
 leadCaption: "A neat stack of paper filings, one page sitting just out of alignment with the rest. Processed at volume, not quite checked."
 ---
 
