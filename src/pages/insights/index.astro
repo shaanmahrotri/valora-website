@@ -23,7 +23,7 @@ const rest = items.slice(1);
         <span class="kicker" style="margin-bottom:18px">Insights</span>
         <h2 class="index__title">Writing on foundations, governance and the long work of family offices.</h2>
       </div>
-      <p class="index__count" id="result-count">{rest.length} articles</p>
+      <p class="index__count" id="result-count">{items.length} {items.length === 1 ? 'article' : 'articles'}</p>
     </div>
 
     <!-- filter bar (visual; live search lives in the toolbar) -->
@@ -129,8 +129,9 @@ const rest = items.slice(1);
     // 5. Reorder the DOM for sort — only the visible page's rows need it.
     for (const row of pageRows) listEl?.appendChild(row);
 
-    // 6. Update count (total matches across all pages).
-    if (count) count.textContent = `${matched.length} ${matched.length === 1 ? 'article' : 'articles'}`;
+    // 6. Update count (total matches across all pages, plus the always-visible featured card).
+    const totalCount = matched.length + 1;
+    if (count) count.textContent = `${totalCount} ${totalCount === 1 ? 'article' : 'articles'}`;
 
     // 7. Empty state.
     if (empty) empty.hidden = matched.length !== 0;
