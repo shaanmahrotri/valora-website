@@ -11,6 +11,7 @@ date: "July 2026"
 dateShort: "Jul 26"
 order: 1
 featured: true
+leadImage: "/form-follows-family-fractional.jpg"
 leadCaption: "A dry-stone wall in close crop, each stone fitted to its neighbour without mortar. Nothing standard, nothing surplus."
 ---
 
