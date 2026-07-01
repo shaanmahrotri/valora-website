@@ -10,14 +10,14 @@ const { position, prevHref = null, nextHref = null, showSearch = true } = Astro.
 ---
 
 <div class="bar">
-  <a href="/" class="bar__btn"><span class="bar__chev">‹</span> Back to main</a>
+  <a href="/" class="bar__btn"><span class="bar__chev" aria-hidden="true">‹</span> Back to main</a>
   <span class="bar__sep"></span>
   <a href="/insights" class="bar__btn">Insights home</a>
 
   {showSearch && (
     <label class="bar__search">
-      <span class="bar__icon">⌕</span>
-      <input id="insights-search" type="search" placeholder="Search insights" autocomplete="off" />
+      <span class="bar__icon" aria-hidden="true">⌕</span>
+      <input id="insights-search" name="q" type="search" placeholder="Search insights…" autocomplete="off" />
     </label>
   )}
 
@@ -65,7 +65,9 @@ const { position, prevHref = null, nextHref = null, showSearch = true } = Astro.
     background: var(--paper);
     padding: 7px 14px;
     min-width: 230px;
+    transition: border-color 0.15s;
   }
+  .bar__search:focus-within { border-color: var(--gold); }
   .bar__icon { font-size: 13px; color: var(--faint-alt); line-height: 1; }
   .bar__search input { border: none; background: none; outline: none; font-size: 13px; font-weight: 400; color: var(--ink); width: 100%; }
   .bar__nav { display: flex; align-items: center; gap: 14px; }

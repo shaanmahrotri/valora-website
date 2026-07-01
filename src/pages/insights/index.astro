@@ -23,32 +23,31 @@ const rest = items.slice(1);
         <span class="kicker" style="margin-bottom:18px">Insights</span>
         <h2 class="index__title">Writing on foundations, governance and the long work of family offices.</h2>
       </div>
-      <p class="index__count" id="result-count">{items.length} articles</p>
+      <p class="index__count" id="result-count">{items.length} {items.length === 1 ? 'article' : 'articles'}</p>
     </div>
 
     <!-- filter bar (visual; live search lives in the toolbar) -->
     <div class="filters">
       <div class="filters__group">
         <span class="filters__label">Author</span>
-        <span class="filters__opt filters__opt--on">All</span>
-        <span class="filters__opt">Shaan Mahrotri</span>
-        <span class="filters__opt">Tom Rutherford</span>
+        <button type="button" class="filters__opt filters__opt--on" data-author-filter="">All</button>
+        <button type="button" class="filters__opt" data-author-filter="Shaan Mahrotri">Shaan Mahrotri</button>
+        <button type="button" class="filters__opt" data-author-filter="Tom Rutherford">Tom Rutherford</button>
       </div>
       <span class="filters__div"></span>
       <div class="filters__group">
         <span class="filters__label">Sort</span>
-        <span class="filters__opt filters__opt--on">Newest</span>
-        <span class="filters__opt">Oldest</span>
+        <button type="button" class="filters__opt filters__opt--on" data-sort="newest">Newest</button>
+        <button type="button" class="filters__opt" data-sort="oldest">Oldest</button>
       </div>
     </div>
 
-    <p class="index__empty" id="empty-state" hidden>No articles match your search.</p>
+    <p class="index__empty" id="empty-state" hidden>No articles match.</p>
 
     <!-- FEATURED -->
-    <a href={`/insights/${featured.slug}`} class="lead"
-       data-article data-search={`${featured.data.title} ${featured.data.topic} ${featured.data.author}`.toLowerCase()}>
+    <a href={`/insights/${featured.slug}`} class="lead">
       <div class="lead__plate">
-        <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" />
+        <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" src={featured.data.leadImage} alt={featured.data.title} />
         <span class="lead__badge">Featured</span>
       </div>
       <div>
@@ -63,9 +62,9 @@ const rest = items.slice(1);
     <div id="article-list">
       {rest.map((a, i) => (
         <a href={`/insights/${a.slug}`} class="row"
-           data-article data-search={`${a.data.title} ${a.data.topic} ${a.data.author}`.toLowerCase()}>
+           data-article data-search={`${a.data.title} ${a.data.topic} ${a.data.author}`.toLowerCase()} data-author={a.data.author}>
           <span class="row__num">{String(i + 2).padStart(2, '0')}</span>
-          <Plate ratio="5 / 4" />
+          <Plate ratio="5 / 4" src={a.data.leadImage} alt={a.data.title} />
           <div>
             <div class="microlabel" style="margin-bottom:10px">{a.data.topic}</div>
             <h4 class="row__title">{a.data.title}</h4>
@@ -78,43 +77,123 @@ const rest = items.slice(1);
       ))}
     </div>
 
-    <!-- pagination (visual) -->
-    <div class="pager">
-      <span class="pager__n pager__n--on">1</span>
-      <span class="pager__n">2</span>
-      <span class="pager__n">3</span>
-      <span class="pager__next">›</span>
-    </div>
+    <!-- pagination (script-rendered; empty when ≤1 page) -->
+    <div class="pager" id="pager"></div>
   </section>
 </Base>
 
 <script>
-  // Client-side live search wired to the toolbar input.
+  // Client-side filter / sort / paginate for the Insights index list.
+  // Subsumes the previous search-only script — exactly one input listener.
+  const PAGE_SIZE = 10;
+
+  let authorFilter = '';
+  let sortMode: 'newest' | 'oldest' = 'newest';
+  let searchQuery = '';
+  let currentPage = 1;
+
   const input = document.getElementById('insights-search') as HTMLInputElement | null;
-  const articles = Array.from(document.querySelectorAll<HTMLElement>('[data-article]'));
+  const listEl = document.getElementById('article-list');
+  const rows = Array.from(listEl?.querySelectorAll<HTMLElement>('.row') ?? []);
   const count = document.getElementById('result-count');
   const empty = document.getElementById('empty-state');
-  const total = articles.length;
+  const pager = document.getElementById('pager');
+  const authorBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-author-filter]'));
+  const sortBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-sort]'));
 
-  function apply(q: string) {
-    const query = q.trim().toLowerCase();
-    let shown = 0;
-    for (const el of articles) {
-      const hit = !query || (el.dataset.search || '').includes(query);
-      el.style.display = hit ? '' : 'none';
-      if (hit) shown++;
-    }
-    if (count) count.textContent = `${shown} ${shown === 1 ? 'article' : 'articles'}`;
-    if (empty) empty.hidden = shown !== 0;
+  function setActive(group: HTMLButtonElement[], active: HTMLButtonElement) {
+    group.forEach(b => b.classList.toggle('filters__opt--on', b === active));
   }
 
-  input?.addEventListener('input', () => apply(input.value));
+  function render() {
+    // 1. Filter by author, then by search text (AND together).
+    const matched = rows.filter(row => {
+      const authorOk = !authorFilter || row.dataset.author === authorFilter;
+      const searchOk = !searchQuery || (row.dataset.search || '').includes(searchQuery);
+      return authorOk && searchOk;
+    });
+
+    // 2. Sort. Source order is newest-first; reverse for oldest-first.
+    if (sortMode === 'oldest') matched.reverse();
+
+    // 3. Paginate.
+    const totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+    currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageRows = matched.slice(start, start + PAGE_SIZE);
+
+    // 4. Apply visibility to the DOM.
+    for (const row of rows) row.style.display = 'none';
+    for (const row of pageRows) row.style.display = '';
+
+    // 5. Reorder the DOM for sort — only the visible page's rows need it.
+    for (const row of pageRows) listEl?.appendChild(row);
+
+    // 6. Update count (total matches across all pages, plus the always-visible featured card).
+    const totalCount = matched.length + 1;
+    if (count) count.textContent = `${totalCount} ${totalCount === 1 ? 'article' : 'articles'}`;
+
+    // 7. Empty state.
+    if (empty) empty.hidden = matched.length !== 0;
+
+    // 8. Render the pager.
+    renderPager(totalPages);
+  }
+
+  function renderPager(totalPages: number) {
+    if (!pager) return;
+    pager.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    for (let p = 1; p <= totalPages; p++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = p === currentPage ? 'pager__n pager__n--on' : 'pager__n';
+      btn.textContent = String(p);
+      btn.addEventListener('click', () => { currentPage = p; render(); });
+      pager.appendChild(btn);
+    }
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'pager__next';
+    next.textContent = '›';
+    next.addEventListener('click', () => {
+      if (currentPage < totalPages) { currentPage++; render(); }
+    });
+    pager.appendChild(next);
+  }
+
+  input?.addEventListener('input', () => {
+    searchQuery = input.value.trim().toLowerCase();
+    currentPage = 1;
+    render();
+  });
+
+  for (const btn of authorBtns) {
+    btn.addEventListener('click', () => {
+      authorFilter = btn.dataset.authorFilter ?? '';
+      currentPage = 1;
+      setActive(authorBtns, btn);
+      render();
+    });
+  }
+
+  for (const btn of sortBtns) {
+    btn.addEventListener('click', () => {
+      sortMode = btn.dataset.sort === 'oldest' ? 'oldest' : 'newest';
+      setActive(sortBtns, btn);
+      render();
+    });
+  }
+
+  render();
 </script>
 
 <style>
   .index { padding: 80px var(--pad) 104px; }
   .index__head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 44px; }
-  .index__title { font-size: 34px; font-weight: 300; color: var(--ink); line-height: 1.22; letter-spacing: -0.4px; max-width: 14em; }
+  .index__title { font-size: 34px; font-weight: 300; color: var(--ink); line-height: 1.22; letter-spacing: -0.4px; max-width: 14em; text-wrap: balance; }
   .index__count { font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint-alt); white-space: nowrap; }
   .index__empty { padding: 56px 0; text-align: center; font-size: 15px; color: var(--faint); }
 
@@ -133,14 +212,14 @@ const rest = items.slice(1);
   .lead__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
   .gold-tick { width: 24px; height: 2px; background: var(--gold); }
   .lead__topic { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
-  .lead__title { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.24; letter-spacing: -0.3px; }
+  .lead__title { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.24; letter-spacing: -0.3px; text-wrap: balance; }
   .lead:hover .lead__title { color: var(--gold-deep); }
   .lead__excerpt { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.85; margin-top: 20px; max-width: 32em; }
   .lead__byline { font-size: 13px; font-weight: 400; color: var(--faint); letter-spacing: 0.04em; margin-top: 24px; }
 
   .row { display: grid; grid-template-columns: 64px 150px minmax(0,1fr) auto; gap: 32px; align-items: center; padding: 28px 0; border-bottom: 1px solid var(--divider); transition: background 0.15s; }
   .row:hover { background: rgba(58,56,39,0.022); }
-  .row__num { font-size: 30px; font-weight: 300; color: #C2B79D; letter-spacing: -1px; }
+  .row__num { font-size: 30px; font-weight: 300; color: #C2B79D; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
   .row__title { font-size: 21px; font-weight: 300; color: var(--ink); letter-spacing: -0.2px; line-height: 1.3; }
   .row__meta { font-size: 13px; font-weight: 400; color: var(--faint); text-align: right; line-height: 1.6; white-space: nowrap; }
 

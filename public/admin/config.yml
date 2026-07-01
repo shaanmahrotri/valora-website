@@ -1,11 +1,17 @@
 # Local editing: run `npx decap-server` in a second terminal alongside
 # `npm run dev`, then open http://localhost:4321/admin.
 #
-# For the eventual hosted setup, swap `backend` to:
+# For the eventual hosted setup ("Stage B" in CLAUDE.md), swap `backend` to:
 #   backend:
-#     name: git-gateway
-#     branch: main
-# and deploy as usual — Netlify Identity handles auth there.
+#     name: github
+#     repo: shaanmahrotri/valora-website
+#     branch: astro-rebuild
+# Needs a GitHub OAuth App (callback https://api.netlify.com/auth/done)
+# registered with Netlify first (Project configuration > Access & security
+# > OAuth > Install Provider > GitHub) - Netlify then facilitates the OAuth
+# handshake automatically, no server of our own needed. Each editor needs
+# their own GitHub account with Write access on this repo. Not git-gateway
+# - that backend is Netlify-deprecated; see CLAUDE.md roadmap for why.
 backend:
   name: proxy
   proxy_url: http://localhost:8081/api/v1

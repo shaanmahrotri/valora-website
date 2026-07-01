@@ -36,7 +36,9 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 
 body {
   font-family: 'Albert Sans', Arial, sans-serif;
@@ -86,4 +88,6 @@ img { display: block; max-width: 100%; }
   :root { --pad: 24px; }
   /* panel is hidden on mobile; shell stays a row with just the content column */
   .content { padding-bottom: 96px; /* clear the floating pill */ }
+  /* clear the 56px sticky mobile header when landing on an anchor target */
+  .section { scroll-margin-top: 56px; }
 }

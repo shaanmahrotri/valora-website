@@ -100,13 +100,37 @@ immune to that whole failure class.
 
 ## Roadmap - not yet built
 
-- **Hosted CMS ("Stage B").** Swap `public/admin/config.yml`'s `backend`
-  from `proxy` to `git-gateway` (branch `main` or whichever is live), set
-  up Netlify Identity on the site, and invite the editor as a user. This
-  is the only change needed to let editing happen from any browser without
-  running `npm run cms` locally first. Scoped and commented inline in
-  `config.yml` already; nobody has built or tested it yet. Planned to
-  start in a fresh session.
+- **Hosted CMS ("Stage B").** Decided (250626): use Decap's `github`
+  backend, not `git-gateway`. Git Gateway is Netlify-deprecated - confirmed
+  directly against Netlify's own docs: still functions, security issues
+  still get fixed, but no further bug fixes, and "new Git Gateway
+  configurations are not recommended." The `github` backend instead rides
+  on a separate, non-deprecated Netlify feature - Netlify facilitates the
+  GitHub OAuth handshake automatically for any site it hosts, no Identity
+  involved, no extra cost. Commits land under each editor's own GitHub
+  identity rather than one shared one, which is also better attribution.
+  Steps, not yet executed:
+  1. GitHub -> Settings -> Developer settings -> OAuth Apps -> New OAuth
+     App. Authorization callback URL must be exactly
+     `https://api.netlify.com/auth/done`.
+  2. Netlify -> Project configuration -> Access & security -> OAuth ->
+     Install Provider -> GitHub -> paste the Client ID/Secret from step 1.
+  3. Swap `public/admin/config.yml`'s `backend` block to:
+     ```
+     backend:
+       name: github
+       repo: shaanmahrotri/valora-website
+       branch: astro-rebuild
+     ```
+     (drops `proxy_url` entirely - this path has nothing to do with the
+     local `proxy` backend or Netlify Identity.)
+  4. Add each editor (Tom) as a GitHub collaborator with **Write** access
+     on the repo itself - this backend rides on each person's real GitHub
+     permissions, there's no separate invite-by-email step the way
+     Identity has one.
+  Same end goal as the original plan (editing from any browser, no
+  `npm run cms` locally) via a current, supported mechanism instead of a
+  deprecated one. Planned to start in a fresh session.
 - **Production launch decision.** No decision yet on if/when `astro-rebuild`
   becomes the real production site - see the permanent-staging note above.
 

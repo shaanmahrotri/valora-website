@@ -58,12 +58,12 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   <!-- PARTNERS -->
   <section id="partners" class="section">
-    <span class="kicker" style="margin-bottom:32px">Partners</span>
+    <h2 class="kicker" style="margin-bottom:32px">Partners</h2>
     <p class="partners__intro">{partnersSection.data.intro}</p>
     <div class="partners">
       <div class="partner">
         <div class="partner__head">
-          <img src={tom.data.photo} alt={tom.data.name} class="partner__img" />
+          <img src={tom.data.photo} alt={tom.data.name} width="90" height="90" class="partner__img" />
           <div>
             <p class="partner__name">{tom.data.name}</p>
             <p class="partner__role">{tom.data.role}</p>
@@ -75,7 +75,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
       </div>
       <div class="partner">
         <div class="partner__head">
-          <img src={shaan.data.photo} alt={shaan.data.name} class="partner__img" />
+          <img src={shaan.data.photo} alt={shaan.data.name} width="90" height="90" class="partner__img" />
           <div>
             <p class="partner__name">{shaan.data.name}</p>
             <p class="partner__role">{shaan.data.role}</p>
@@ -130,7 +130,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   <!-- CONTACT -->
   <section id="contact" class="section">
-    <span class="kicker" style="margin-bottom:40px">Contact</span>
+    <h2 class="kicker" style="margin-bottom:40px">Contact</h2>
     <div class="contact">
       <p class="contact__lead">{contact.data.lead}</p>
       <div class="contact__row">
@@ -156,13 +156,13 @@ const partnersSection = await getEntry('partnersSection', 'index');
     padding: 40px var(--pad);
   }
   .hero__text { max-width: 560px; }
-  .hero h1 { font-size: 42px; font-weight: 300; color: var(--ink); line-height: 1.28; letter-spacing: -0.2px; margin-bottom: 40px; }
+  .hero h1 { font-size: 42px; font-weight: 300; color: var(--ink); line-height: 1.28; letter-spacing: -0.2px; margin-bottom: 40px; text-wrap: balance; }
   .hero__body { display: flex; flex-direction: column; gap: 20px; margin-bottom: 40px; }
   .hero__body p { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.9; }
   .hero__maxim { font-size: 14px; font-weight: 400; color: var(--ink); letter-spacing: 0.08em; }
   .hero__plate { align-self: stretch; min-height: 520px; }
 
-  .statement { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.32; letter-spacing: -0.3px; max-width: 18em; margin-bottom: 64px; }
+  .statement { font-size: 32px; font-weight: 300; color: var(--ink); line-height: 1.32; letter-spacing: -0.3px; max-width: 18em; margin-bottom: 64px; text-wrap: balance; }
   .statement--tight { font-size: 30px; max-width: 16em; margin-bottom: 0; }
 
   .approach__split { display: grid; grid-template-columns: minmax(0,0.95fr) minmax(0,1.05fr); gap: 72px; align-items: end; }
@@ -199,7 +199,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
   .feature__meta { display: flex; align-items: center; gap: 12px; margin: 24px 0 14px; }
   .gold-tick { width: 24px; height: 2px; background: var(--gold); }
   .feature__topic { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
-  .feature__title { font-size: 26px; font-weight: 300; color: var(--ink); line-height: 1.26; letter-spacing: -0.3px; }
+  .feature__title { font-size: 26px; font-weight: 300; color: var(--ink); line-height: 1.26; letter-spacing: -0.3px; text-wrap: balance; }
   .feature:hover .feature__title { color: var(--gold-deep); }
   .feature__byline { font-size: 13px; font-weight: 400; color: var(--faint); letter-spacing: 0.04em; margin-top: 16px; }
 
@@ -218,7 +218,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   @media (max-width: 900px) {
     .hero, .approach__split, .insights-summary__grid { grid-template-columns: 1fr; gap: 40px; }
-    .hero { min-height: 0; }
+    .hero { min-height: 0; scroll-margin-top: 56px; }
     .hero__plate { min-height: 360px; }
     /* text first on mobile — image drops below */
     .approach__split :global(.plate) { order: 2; aspect-ratio: 4 / 5 !important; }
