@@ -9,7 +9,7 @@ authorImg: "/tom-rutherford.jpg"
 read: "5 min read"
 date: "March 2026"
 dateShort: "Mar 26"
-order: 6
+order: 3
 featured: false
 leadCaption: "A wall calendar with a few dates circled, most pages blank. Rhythm over volume."
 ---
