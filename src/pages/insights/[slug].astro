@@ -17,8 +17,8 @@ export async function getStaticPaths() {
       entry,
       index: i,
       total: items.length,
-      prev: items[i - 1] ?? null,   // newer
-      next: items[i + 1] ?? null,   // older
+      prev: items[i + 1] ?? null,   // older
+      next: items[i - 1] ?? null,   // newer
     },
   }));
 }
