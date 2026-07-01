@@ -11,7 +11,7 @@ date: "July 2026"
 dateShort: "Jul 26"
 order: 1
 featured: true
-leadCaption: "A stack of paper filings beside a closed laptop, a single page marked in pen. The tool doing only part of the job."
+leadCaption: "A neat stack of paper filings, one page sitting just out of alignment with the rest. Processed at volume, not quite checked."
 ---
 
 The question arrives in different forms. A principal reads something at a conference, or a peer mentions it in passing, or a technology platform sends another white paper. The question is always a version of the same thing: are we using AI?
