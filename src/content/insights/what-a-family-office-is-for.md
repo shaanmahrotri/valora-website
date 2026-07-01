@@ -9,8 +9,8 @@ authorImg: "/shaan-mahrotri.jpg"
 read: "5 min read"
 date: "June 2026"
 dateShort: "Jun 26"
-order: 1
-featured: true
+order: 2
+featured: false
 leadImage: "/what-a-family-office-is-for.jpg"
 leadCaption: "An open journal with blank pages and a fountain pen, lit by late sun. The question still unanswered."
 ---

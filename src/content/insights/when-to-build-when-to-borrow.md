@@ -9,7 +9,7 @@ authorImg: "/shaan-mahrotri.jpg"
 read: "8 min read"
 date: "January 2026"
 dateShort: "Jan 26"
-order: 6
+order: 7
 featured: false
 leadCaption: "A modest, well-organised workspace, a few desks, nothing surplus. Capability without excess."
 ---
