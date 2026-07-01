@@ -11,7 +11,7 @@ date: "July 2026"
 dateShort: "Jul 26"
 order: 1
 featured: true
-leadCaption: "An architect's plan folded open beside a set square, morning light across the drafting table. Form, sequence, intent."
+leadCaption: "A dry-stone wall in close crop, each stone fitted to its neighbour without mortar. Nothing standard, nothing surplus."
 ---
 
 Form follows function, the American architect Louis Sullivan insisted, and the dictum has outlived almost everything he built.
