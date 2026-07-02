@@ -106,7 +106,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
       <div class="insights-summary__grid">
         <a href={`/insights/${featured.slug}`} class="feature">
-          <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" />
+          <Plate ratio="7 / 5" label="Photograph · feature" note="A foundation set out in string lines across cleared ground. Beginnings, order, intent." spec="1400 × 1000" src={featured.data.leadImage} alt={featured.data.title} />
           <div class="feature__meta">
             <span class="gold-tick"></span>
             <span class="feature__topic">{featured.data.topic}</span>
