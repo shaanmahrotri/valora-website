@@ -12,13 +12,23 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const { questionnaire } = Astro.props;
+const { gate, sections, closing } = questionnaire;
 
-const CHUNK_SIZE = 5;
-const steps: (typeof questionnaire.questions)[] = [];
-for (let i = 0; i < questionnaire.questions.length; i += CHUNK_SIZE) {
-  steps.push(questionnaire.questions.slice(i, i + CHUNK_SIZE));
+function scaleRange(min = 1, max = 5) {
+  return Array.from({ length: max - min + 1 }, (_, i) => min + i);
 }
-const totalSteps = steps.length + 1; // +1 for the contact/consent step
+
+const closingFieldLabels: Record<string, string> = {
+  name: 'Name',
+  organisation: 'Family office name',
+  email: 'Email',
+};
+
+// Step order: [gate?] [one per section] [closing?] - the closing step only
+// ever gets shown at runtime if someone answers the gate question "yes";
+// otherwise the client script skips straight from the last section to the
+// thank-you state.
+const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
 ---
 <Base title={`${questionnaire.title} — Valora`} description={questionnaire.intro} noindex={true}>
 
@@ -36,75 +46,182 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
       id="qform"
       data-slug={slug}
       data-form-version={questionnaire.formVersion}
+      data-gate-id={gate?.id ?? ''}
+      data-gate-yes={gate?.yesLabel ?? ''}
     >
       <div class="qform__progress">
         <div
           class="qform__progress-track"
           role="progressbar"
           aria-valuemin="1"
-          aria-valuemax={totalSteps}
+          aria-valuemax={stepCount}
           aria-valuenow="1"
           id="qform-progress-track"
         >
           <div class="qform__progress-fill" id="qform-progress-fill"></div>
         </div>
-        <span class="qform__progress-label" id="qform-progress-label">Step 1 of {totalSteps}</span>
+        <span class="qform__progress-label" id="qform-progress-label">Step 1 of {stepCount}</span>
       </div>
 
       <form id="qform-form" novalidate>
-        {steps.map((chunk, stepIndex) => (
-          <section class="qform__step" data-step={stepIndex}>
-            {chunk.map((q) => (
-              <fieldset class="qform__question" data-qid={q.id}>
-                <legend>{q.prompt}</legend>
-                {q.options.map((opt) => (
-                  <label class="qform__option">
-                    <input type="radio" name={`q_${q.id}`} value={opt} required />
-                    <span>{opt}</span>
+
+        {gate && (
+          <section class="qform__step" data-step="0" data-kind="gate">
+            <fieldset class="qform__q" data-qid={gate.id} data-type="single">
+              <legend class="qform__prompt">{gate.prompt}</legend>
+              <label class="qform__option">
+                <input type="radio" name={`q_${gate.id}`} value={gate.yesLabel} required />
+                <span>{gate.yesLabel}</span>
+              </label>
+              <label class="qform__option">
+                <input type="radio" name={`q_${gate.id}`} value={gate.noLabel} required />
+                <span>{gate.noLabel}</span>
+              </label>
+              {gate.note && <p class="qform__note">{gate.note}</p>}
+            </fieldset>
+          </section>
+        )}
+
+        {sections.map((section, i) => (
+          <section class="qform__step" data-step={(gate ? 1 : 0) + i} data-kind="section">
+            {section.heading && <p class="qform__section-heading">{section.heading}</p>}
+            {section.intro && <p class="qform__section-intro">{section.intro}</p>}
+
+            {section.questions.map((q) => (
+              <fieldset
+                class="qform__q"
+                data-qid={q.id}
+                data-type={q.type}
+                data-show-if-q={q.showIfQuestionId ?? ''}
+                data-show-if-values={q.showIfValues ? JSON.stringify(q.showIfValues) : ''}
+                hidden={Boolean(q.showIfQuestionId)}
+              >
+                <legend class="qform__prompt">{q.prompt}</legend>
+
+                {q.type === 'scale' && (
+                  <div class="qform__scale">
+                    <span class="qform__scale-label">{q.scaleMinLabel}</span>
+                    <div class="qform__scale-options">
+                      {scaleRange(q.scaleMin, q.scaleMax).map((n) => (
+                        <label class="qform__scale-opt">
+                          <input type="radio" name={`q_${q.id}`} value={n} required />
+                          <span>{n}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <span class="qform__scale-label">{q.scaleMaxLabel}</span>
+                  </div>
+                )}
+
+                {(q.type === 'single' || q.type === 'multi' || q.type === 'rankTwo') && (
+                  <div class="qform__options" data-max={q.maxSelections ?? (q.type === 'rankTwo' ? 2 : '')}>
+                    {q.options?.map((opt) => (
+                      <label class={`qform__option${q.type === 'rankTwo' ? ' qform__option--rank' : ''}`}>
+                        <input
+                          type={q.type === 'single' ? 'radio' : 'checkbox'}
+                          name={`q_${q.id}`}
+                          value={opt}
+                          required={q.type === 'single'}
+                        />
+                        <span>{opt}</span>
+                        {q.type === 'rankTwo' && <span class="qform__rank-badge" hidden></span>}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {q.type === 'grid' && (
+                  <div class="qform__grid" data-follow-col={q.gridFollowUpColumn ?? ''}>
+                    {q.gridRows?.map((row) => (
+                      <div class="qform__grid-row" data-row-id={row.id}>
+                        <p class="qform__grid-row-label">{row.label}</p>
+                        <div class="qform__grid-row-opts">
+                          {q.gridColumns?.map((col) => (
+                            <label class="qform__grid-opt">
+                              <input type="radio" name={`q_${q.id}__${row.id}`} value={col} required />
+                              <span>{col}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {q.gridFollowUpPrompt && (
+                          <div class="qform__detail" data-detail-for={`${q.id}__${row.id}`} hidden>
+                            <label class="qform__field">
+                              <span>{q.gridFollowUpPrompt}</span>
+                              <input type="text" name={`detail_${q.id}__${row.id}`} />
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {q.type === 'open' && (
+                  <label class="qform__field qform__field--open">
+                    <textarea name={`q_${q.id}`} rows="3"></textarea>
                   </label>
-                ))}
+                )}
+
+                {q.detailPrompt && q.type !== 'grid' && (
+                  <div
+                    class="qform__detail"
+                    data-detail-for={q.id}
+                    data-allow-values={q.detailShowIfValues ? JSON.stringify(q.detailShowIfValues) : ''}
+                    hidden
+                  >
+                    <label class="qform__field">
+                      <span>{q.detailPrompt}</span>
+                      <input type="text" name={`detail_${q.id}`} />
+                    </label>
+                  </div>
+                )}
               </fieldset>
             ))}
           </section>
         ))}
 
-        <section class="qform__step" data-step={steps.length}>
-          <div class="qform__contact">
-            <p class="qform__contact-lead">Would you like to stay in touch?</p>
-            <p class="qform__contact-note">Both are optional — leave both unchecked to submit anonymously.</p>
+        {closing && (
+          <section class="qform__step" data-step={(gate ? 1 : 0) + sections.length} data-kind="closing">
+            <div class="qform__contact">
+              <p class="qform__contact-lead">{closing.leadText}</p>
 
-            <label class="qform__check">
-              <input type="checkbox" id="wants-report" name="wantsReport" />
-              <span>Email me a copy of my answers</span>
-            </label>
-            <label class="qform__check">
-              <input type="checkbox" id="marketing-consent" name="marketingConsent" />
-              <span>I'd also like Valora Partners to contact me about their services</span>
-            </label>
+              <div class="qform__contact-fields">
+                {closing.fields.includes('name') && (
+                  <label class="qform__field">
+                    <span>{closingFieldLabels.name} (optional)</span>
+                    <input type="text" name="name" autocomplete="name" />
+                  </label>
+                )}
+                {closing.fields.includes('organisation') && (
+                  <label class="qform__field">
+                    <span>{closingFieldLabels.organisation} (optional)</span>
+                    <input type="text" name="organisation" autocomplete="organization" />
+                  </label>
+                )}
+                {closing.fields.includes('email') && (
+                  <label class="qform__field">
+                    <span>{closingFieldLabels.email}</span>
+                    <input type="email" name="email" autocomplete="email" />
+                  </label>
+                )}
+              </div>
 
-            <div class="qform__contact-fields" id="contact-fields" hidden>
-              <label class="qform__field">
-                <span>Name (optional)</span>
-                <input type="text" name="name" autocomplete="name" />
-              </label>
-              <label class="qform__field">
-                <span>Email</span>
-                <input type="email" name="email" autocomplete="email" />
-              </label>
+              {closing.offerMarketingConsent && (
+                <label class="qform__check">
+                  <input type="checkbox" id="marketing-consent" name="marketingConsent" />
+                  <span>{closing.marketingLabel ?? "I'd also like to be contacted about your services"}</span>
+                </label>
+              )}
+
+              <p class="qform__privacy">{closing.consentNote}</p>
             </div>
 
-            <p class="qform__privacy">
-              See our <a href="/privacy" class="legal__link">Privacy Policy</a> for how we handle your data.
-              You can withdraw consent at any time by emailing
-              <a href="mailto:privacy@valorapartners.co.uk" class="legal__link">privacy@valorapartners.co.uk</a>.
-            </p>
-          </div>
-
-          <div class="qform__hp" aria-hidden="true">
-            <label for="company">Company</label>
-            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
-          </div>
-        </section>
+            <div class="qform__hp" aria-hidden="true">
+              <label for="company">Company</label>
+              <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
+            </div>
+          </section>
+        )}
       </form>
 
       <div class="qform__nav">
@@ -127,10 +244,18 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
 </Base>
 
 <script>
+  type AnswerValue = string | string[] | Record<string, { value: string; detail?: string }> | null;
+  interface AnswerRecord {
+    id: string;
+    prompt: string;
+    type: string;
+    value: AnswerValue;
+    detail?: string | null;
+  }
+
   const container = document.getElementById('qform') as HTMLElement;
   const form = document.getElementById('qform-form') as HTMLFormElement;
   const steps = Array.from(form.querySelectorAll<HTMLElement>('.qform__step'));
-  const totalSteps = steps.length;
 
   const backBtn = document.getElementById('qform-back') as HTMLButtonElement;
   const nextBtn = document.getElementById('qform-next') as HTMLButtonElement;
@@ -143,117 +268,341 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
   const thanksMessage = document.getElementById('qform-thanks-message') as HTMLElement;
   const nav = document.querySelector('.qform__nav') as HTMLElement;
 
-  const wantsReportCheckbox = document.getElementById('wants-report') as HTMLInputElement;
-  const marketingCheckbox = document.getElementById('marketing-consent') as HTMLInputElement;
-  const contactFields = document.getElementById('contact-fields') as HTMLElement;
-  const emailInput = form.querySelector<HTMLInputElement>('input[name="email"]')!;
-  const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]')!;
-  const honeypot = form.querySelector<HTMLInputElement>('#company')!;
+  const marketingCheckbox = document.getElementById('marketing-consent') as HTMLInputElement | null;
+  const emailInput = form.querySelector<HTMLInputElement>('input[name="email"]');
+  const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]');
+  const organisationInput = form.querySelector<HTMLInputElement>('input[name="organisation"]');
+  const honeypot = form.querySelector<HTMLInputElement>('#company');
 
   const slug = container.dataset.slug || '';
   const formVersion = Number(container.dataset.formVersion || '1');
+  const gateId = container.dataset.gateId || '';
+  const gateYesValue = container.dataset.gateYes || '';
   const answersKey = `questionnaire:${slug}:answers`;
   const stepKey = `questionnaire:${slug}:step`;
   const clientToken = crypto.randomUUID();
   const originalSubmitLabel = submitBtn.textContent || 'Submit';
 
+  const rankOrder = new Map<string, string[]>(); // qid -> option values in click order
+
   let current = 0;
 
+  function isClosingStep(index: number): boolean {
+    return steps[index]?.dataset.kind === 'closing';
+  }
+
+  function gateAnsweredYes(): boolean {
+    if (!gateId) return true; // no gate configured - closing (if any) is always reachable
+    const checked = form.querySelector<HTMLInputElement>(`input[name="q_${CSS.escape(gateId)}"]:checked`);
+    return checked?.value === gateYesValue;
+  }
+
+  function stepIsApplicable(index: number): boolean {
+    if (index < 0 || index >= steps.length) return false;
+    if (isClosingStep(index)) return gateAnsweredYes();
+    return true;
+  }
+
+  function findApplicableStep(from: number, direction: 1 | -1): number {
+    let i = from + direction;
+    while (i >= 0 && i < steps.length && !stepIsApplicable(i)) i += direction;
+    return i >= 0 && i < steps.length ? i : -1;
+  }
+
+  function applicableStepCount(): number {
+    return steps.filter((_, i) => stepIsApplicable(i)).length;
+  }
+
+  function applicablePositionOf(index: number): number {
+    return steps.slice(0, index + 1).filter((_, i) => stepIsApplicable(i)).length;
+  }
+
+  function evaluateConditionalQuestions() {
+    form.querySelectorAll<HTMLElement>('.qform__q[data-show-if-q]').forEach((qEl) => {
+      const controllingId = qEl.dataset.showIfQ;
+      if (!controllingId) return;
+      const allowedRaw = qEl.dataset.showIfValues || '[]';
+      let allowed: string[] = [];
+      try { allowed = JSON.parse(allowedRaw); } catch { allowed = []; }
+      const controllingValue = getAnswerValue(controllingId);
+      const matches = Array.isArray(controllingValue)
+        ? controllingValue.some((v) => allowed.includes(v))
+        : typeof controllingValue === 'string' && allowed.includes(controllingValue);
+      qEl.hidden = !matches;
+    });
+  }
+
+  function evaluateDetailReveals() {
+    form.querySelectorAll<HTMLElement>('.qform__detail[data-detail-for]').forEach((detailEl) => {
+      const forId = detailEl.dataset.detailFor || '';
+      // Grid follow-ups are keyed "qid__rowid" and handled separately below.
+      if (forId.includes('__')) return;
+      const qEl = form.querySelector<HTMLElement>(`.qform__q[data-qid="${CSS.escape(forId)}"]`);
+      if (!qEl) return;
+      const allowListRaw = detailEl.dataset.allowValues;
+      const value = getAnswerValue(forId);
+      const hasAnswer = Array.isArray(value) ? value.length > 0 : Boolean(value);
+      if (!allowListRaw) {
+        detailEl.hidden = !hasAnswer;
+        return;
+      }
+      let allowed: string[] = [];
+      try { allowed = JSON.parse(allowListRaw); } catch { allowed = []; }
+      const matches = Array.isArray(value) ? value.some((v) => allowed.includes(v)) : typeof value === 'string' && allowed.includes(value);
+      detailEl.hidden = !matches;
+    });
+  }
+
+  function evaluateGridFollowUps() {
+    form.querySelectorAll<HTMLElement>('.qform__grid').forEach((gridEl) => {
+      const followCol = gridEl.dataset.followCol;
+      if (!followCol) return;
+      gridEl.querySelectorAll<HTMLElement>('.qform__grid-row').forEach((rowEl) => {
+        const rowId = rowEl.dataset.rowId;
+        const checked = rowEl.querySelector<HTMLInputElement>('input[type="radio"]:checked');
+        const detailEl = rowEl.querySelector<HTMLElement>('.qform__detail');
+        if (detailEl) detailEl.hidden = checked?.value !== followCol;
+      });
+    });
+  }
+
+  function getAnswerValue(qid: string): string | string[] | null {
+    const qEl = form.querySelector<HTMLElement>(`.qform__q[data-qid="${CSS.escape(qid)}"]`);
+    if (!qEl) return null;
+    const type = qEl.dataset.type;
+    if (type === 'multi' || type === 'rankTwo') {
+      const values = Array.from(qEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked')).map((i) => i.value);
+      return values.length ? values : null;
+    }
+    const checked = qEl.querySelector<HTMLInputElement>('input[type="radio"]:checked, input[type="checkbox"]:checked');
+    if (checked) return checked.value;
+    const textInput = qEl.querySelector<HTMLTextAreaElement | HTMLInputElement>('textarea, input[type="text"]');
+    return textInput?.value.trim() || null;
+  }
+
+  function refreshDerivedState() {
+    evaluateConditionalQuestions();
+    evaluateDetailReveals();
+    evaluateGridFollowUps();
+  }
+
   function showStep(index: number) {
-    current = Math.max(0, Math.min(index, totalSteps - 1));
+    current = Math.max(0, Math.min(index, steps.length - 1));
     steps.forEach((el, i) => { el.hidden = i !== current; });
-    backBtn.hidden = current === 0;
-    const isLast = current === totalSteps - 1;
-    nextBtn.hidden = isLast;
-    submitBtn.hidden = !isLast;
+
+    const backTarget = findApplicableStep(current, -1);
+    backBtn.hidden = backTarget < 0;
+
+    const isLastApplicable = findApplicableStep(current, 1) === -1;
+    nextBtn.hidden = isLastApplicable;
+    submitBtn.hidden = !isLastApplicable;
     errorEl.hidden = true;
 
-    const stepNum = current + 1;
-    progressLabel.textContent = `Step ${stepNum} of ${totalSteps}`;
+    const stepNum = applicablePositionOf(current);
+    const total = applicableStepCount();
+    progressLabel.textContent = `Step ${stepNum} of ${total}`;
     progressTrack.setAttribute('aria-valuenow', String(stepNum));
-    progressFill.style.width = `${(stepNum / totalSteps) * 100}%`;
+    progressTrack.setAttribute('aria-valuemax', String(total));
+    progressFill.style.width = `${(stepNum / total) * 100}%`;
     sessionStorage.setItem(stepKey, String(current));
   }
 
   function validateStep(index: number): boolean {
     const stepEl = steps[index];
-    const fieldsets = stepEl.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__question');
+    const fieldsets = stepEl.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__q');
     for (const fs of Array.from(fieldsets)) {
-      const checked = fs.querySelector('input[type="radio"]:checked');
-      if (!checked) {
-        fs.classList.add('qform__question--error');
+      if (fs.hidden) continue; // conditionally hidden - not required
+      const type = fs.dataset.type;
+      if (type === 'open') continue; // free text is optional
+      if (type === 'grid') {
+        const rows = fs.querySelectorAll<HTMLElement>('.qform__grid-row');
+        for (const row of Array.from(rows)) {
+          if (!row.querySelector('input[type="radio"]:checked')) {
+            fs.classList.add('qform__q--error');
+            fs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+          }
+        }
+        fs.classList.remove('qform__q--error');
+        continue;
+      }
+      const hasChecked = fs.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
+      if (!hasChecked) {
+        fs.classList.add('qform__q--error');
         fs.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
-      fs.classList.remove('qform__question--error');
+      fs.classList.remove('qform__q--error');
     }
     return true;
   }
 
-  function saveAnswers() {
+  function collectAnswers(): AnswerRecord[] {
+    const answers: AnswerRecord[] = [];
+    form.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__q').forEach((fs) => {
+      const id = fs.dataset.qid!;
+      const type = fs.dataset.type!;
+      const prompt = fs.querySelector('legend')?.textContent ?? '';
+      const detailInput = fs.querySelector<HTMLInputElement>(`input[name="detail_${CSS.escape(id)}"]`);
+
+      if (type === 'grid') {
+        const value: Record<string, { value: string; detail?: string }> = {};
+        fs.querySelectorAll<HTMLElement>('.qform__grid-row').forEach((row) => {
+          const rowId = row.dataset.rowId!;
+          const checked = row.querySelector<HTMLInputElement>('input[type="radio"]:checked');
+          const rowDetail = row.querySelector<HTMLInputElement>(`input[name="detail_${CSS.escape(id)}__${CSS.escape(rowId)}"]`);
+          value[rowId] = { value: checked?.value ?? '', detail: rowDetail?.value.trim() || undefined };
+        });
+        answers.push({ id, prompt, type, value });
+        return;
+      }
+
+      if (type === 'multi' || type === 'rankTwo') {
+        const order = rankOrder.get(id);
+        const checkedValues = Array.from(fs.querySelectorAll<HTMLInputElement>('input[type="checkbox"]:checked')).map((i) => i.value);
+        const value = type === 'rankTwo' && order?.length ? order.filter((v) => checkedValues.includes(v)) : checkedValues;
+        answers.push({ id, prompt, type, value, detail: detailInput?.value.trim() || null });
+        return;
+      }
+
+      if (type === 'open') {
+        const textInput = fs.querySelector<HTMLTextAreaElement>('textarea');
+        answers.push({ id, prompt, type, value: textInput?.value.trim() || null });
+        return;
+      }
+
+      // scale / single
+      const checked = fs.querySelector<HTMLInputElement>('input[type="radio"]:checked');
+      answers.push({ id, prompt, type, value: checked?.value ?? null, detail: detailInput?.value.trim() || null });
+    });
+    return answers;
+  }
+
+  function saveProgress() {
     const data: Record<string, string> = {};
-    form.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked').forEach((input) => {
-      data[input.name] = input.value;
+    form.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked, input[type="checkbox"]:checked').forEach((input) => {
+      data[`${input.name}::${input.value}`] = '1';
+    });
+    form.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="email"]').forEach((input) => {
+      if (input.id === 'company') return; // never persist the honeypot
+      if (input.value) data[`__text__${input.name}`] = input.value;
+    });
+    form.querySelectorAll<HTMLTextAreaElement>('textarea').forEach((ta) => {
+      if (ta.value) data[`__text__${ta.name}`] = ta.value;
     });
     sessionStorage.setItem(answersKey, JSON.stringify(data));
   }
 
-  function restoreAnswers() {
+  function restoreProgress() {
     const raw = sessionStorage.getItem(answersKey);
     if (!raw) return;
     try {
       const data = JSON.parse(raw) as Record<string, string>;
-      Object.entries(data).forEach(([name, value]) => {
-        const input = form.querySelector<HTMLInputElement>(
-          `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
-        );
-        if (input) input.checked = true;
+      Object.entries(data).forEach(([key, value]) => {
+        if (key.startsWith('__text__')) {
+          const name = key.slice('__text__'.length);
+          const input = form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${CSS.escape(name)}"]`);
+          if (input) input.value = value;
+          return;
+        }
+        const [name, val] = key.split('::');
+        const input = form.querySelector<HTMLInputElement>(`input[name="${CSS.escape(name)}"][value="${CSS.escape(val)}"]`);
+        if (input) {
+          input.checked = true;
+          if (input.type === 'checkbox' && input.closest('.qform__q')?.dataset.type === 'rankTwo') {
+            const qid = input.closest<HTMLElement>('.qform__q')?.dataset.qid;
+            if (qid) {
+              const order = rankOrder.get(qid) ?? [];
+              order.push(input.value);
+              rankOrder.set(qid, order);
+            }
+          }
+        }
       });
     } catch {
       // ignore malformed sessionStorage state
     }
   }
 
-  function updateContactVisibility() {
-    contactFields.hidden = !(wantsReportCheckbox.checked || marketingCheckbox.checked);
+  function updateRankBadges(fs: HTMLElement) {
+    const qid = fs.dataset.qid!;
+    const order = rankOrder.get(qid) ?? [];
+    fs.querySelectorAll<HTMLElement>('.qform__option--rank').forEach((label) => {
+      const input = label.querySelector<HTMLInputElement>('input');
+      const badge = label.querySelector<HTMLElement>('.qform__rank-badge');
+      if (!input || !badge) return;
+      const pos = order.indexOf(input.value);
+      if (input.checked && pos !== -1) {
+        badge.hidden = false;
+        badge.textContent = String(pos + 1);
+      } else {
+        badge.hidden = true;
+      }
+    });
   }
+
+  form.addEventListener('change', (e) => {
+    const target = e.target as HTMLInputElement;
+    const qEl = target.closest<HTMLElement>('.qform__q');
+
+    if (qEl?.dataset.type === 'multi' || qEl?.dataset.type === 'rankTwo') {
+      const qid = qEl.dataset.qid!;
+      const max = Number(qEl.querySelector<HTMLElement>('.qform__options')?.dataset.max || '0');
+      const boxes = Array.from(qEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+      let order = rankOrder.get(qid) ?? [];
+
+      if (target.checked) {
+        order.push(target.value);
+      } else {
+        order = order.filter((v) => v !== target.value);
+      }
+      rankOrder.set(qid, order);
+
+      const checkedCount = boxes.filter((b) => b.checked).length;
+      if (max > 0) {
+        boxes.forEach((b) => { if (!b.checked) b.disabled = checkedCount >= max; });
+      }
+      if (qEl.dataset.type === 'rankTwo') updateRankBadges(qEl);
+    }
+
+    refreshDerivedState();
+  });
 
   nextBtn.addEventListener('click', () => {
     if (!validateStep(current)) return;
-    saveAnswers();
-    showStep(current + 1);
+    saveProgress();
+    const next = findApplicableStep(current, 1);
+    if (next !== -1) showStep(next);
   });
 
-  backBtn.addEventListener('click', () => showStep(current - 1));
-  wantsReportCheckbox.addEventListener('change', updateContactVisibility);
-  marketingCheckbox.addEventListener('change', updateContactVisibility);
+  backBtn.addEventListener('click', () => {
+    const prev = findApplicableStep(current, -1);
+    if (prev !== -1) showStep(prev);
+  });
 
   submitBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
-    const wantsReport = wantsReportCheckbox.checked;
-    const marketingConsent = marketingCheckbox.checked;
+    if (!validateStep(current)) return;
 
-    if ((wantsReport || marketingConsent) && !email) {
+    const email = emailInput?.value.trim() || '';
+    const wantsReport = gateAnsweredYes();
+    const marketingConsent = marketingCheckbox?.checked ?? false;
+
+    if (wantsReport && closing && !email) {
       errorEl.hidden = false;
       errorEl.textContent = 'Please enter an email address to continue.';
       return;
     }
 
-    const answers = Array.from(form.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__question')).map((fs) => {
-      const legend = fs.querySelector('legend')?.textContent ?? '';
-      const checked = fs.querySelector<HTMLInputElement>('input[type="radio"]:checked');
-      return { id: fs.dataset.qid, prompt: legend, selected: checked ? checked.value : null };
-    });
-
     const payload = {
       questionnaireSlug: slug,
       formVersion,
       clientToken,
-      company: honeypot.value,
-      answers,
+      company: honeypot?.value || '',
+      answers: collectAnswers(),
       wantsReport,
       marketingConsent,
-      name: nameInput.value.trim(),
+      name: nameInput?.value.trim() || '',
+      organisation: organisationInput?.value.trim() || '',
       email,
     };
 
@@ -288,14 +637,20 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
     }
   });
 
-  restoreAnswers();
-  updateContactVisibility();
+  restoreProgress();
+  refreshDerivedState();
   const savedStep = Number(sessionStorage.getItem(stepKey) ?? '0');
-  showStep(Number.isFinite(savedStep) ? savedStep : 0);
+  showStep(Number.isFinite(savedStep) && stepIsApplicable(savedStep) ? savedStep : 0);
 </script>
 
 <style>
-  .qpage { padding: 80px var(--pad) 104px; max-width: 680px; }
+  /* Any element hidden via the boolean `hidden` attribute must actually
+     disappear, regardless of a class elsewhere setting `display` - without
+     this, a rule like `.qform__step { display: flex }` silently wins over
+     the attribute and the element stays visible. */
+  [hidden] { display: none !important; }
+
+  .qpage { padding: 80px var(--pad) 104px; max-width: 720px; }
 
   .qpage__title { font-size: 42px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 14px; text-wrap: balance; }
   .qpage__intro { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.8; max-width: 56ch; }
@@ -308,58 +663,97 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
   .qform__progress-fill { height: 100%; background: var(--gold); transition: width 0.25s ease; }
   .qform__progress-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint-alt); white-space: nowrap; }
 
-  .qform__step { display: flex; flex-direction: column; gap: 36px; }
-  .qform__step[hidden] { display: none; }
+  .qform__step { display: flex; flex-direction: column; gap: 40px; }
 
-  .qform__question legend { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin-bottom: 16px; padding: 0; }
-  .qform__question { border: none; padding: 0; }
-  .qform__question--error legend { color: var(--gold-ink); }
+  .qform__section-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); }
+  .qform__section-intro { font-size: 14px; color: var(--muted); line-height: 1.8; background: var(--paper); border: 1px solid var(--divider); padding: 16px 20px; margin-top: -20px; }
 
-  .qform__option {
+  .qform__q { border: none; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  .qform__prompt { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0; padding: 0; }
+  .qform__q--error .qform__prompt { color: var(--gold-ink); }
+  .qform__note { font-size: 13px; color: var(--faint); line-height: 1.6; }
+
+  /* Option "cards" - given a real shadow and a firmer border so they read
+     as distinct clickable surfaces against the sand page background,
+     rather than nearly blending into it. */
+  .qform__option,
+  .qform__scale-opt,
+  .qform__grid-opt {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 13px 16px;
-    border: 1px solid var(--divider);
-    background: var(--paper);
-    margin-bottom: 8px;
+    border: 1px solid rgba(58, 56, 39, 0.16);
+    background: #FBF8F2;
+    box-shadow: 0 1px 2px rgba(46, 44, 32, 0.05);
     cursor: pointer;
     font-size: 15px;
     color: var(--body);
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
   }
-  .qform__option:hover { border-color: var(--gold-deep); }
-  .qform__option input { accent-color: var(--gold); width: 16px; height: 16px; flex-shrink: 0; }
-  .qform__option:has(input:checked) { border-color: var(--gold); background: rgba(254, 173, 0, 0.08); }
+  .qform__option:hover,
+  .qform__scale-opt:hover,
+  .qform__grid-opt:hover { border-color: var(--gold-deep); box-shadow: 0 2px 6px rgba(46, 44, 32, 0.08); }
+  .qform__option input,
+  .qform__scale-opt input,
+  .qform__grid-opt input { accent-color: var(--gold); width: 16px; height: 16px; flex-shrink: 0; }
+  .qform__option:has(input:checked),
+  .qform__scale-opt:has(input:checked),
+  .qform__grid-opt:has(input:checked) { border-color: var(--gold); background: rgba(254, 173, 0, 0.1); box-shadow: 0 1px 2px rgba(46, 44, 32, 0.05); }
+  .qform__option:has(input:disabled):not(:has(input:checked)) { opacity: 0.45; cursor: not-allowed; }
 
-  .qform__contact-lead { font-size: 18px; color: var(--ink); margin-bottom: 6px; }
-  .qform__contact-note { font-size: 13px; color: var(--faint); margin-bottom: 20px; }
-
-  .qform__check {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 15px;
-    color: var(--body);
-    margin-bottom: 14px;
-    cursor: pointer;
+  .qform__options { display: flex; flex-direction: column; gap: 8px; }
+  .qform__option--rank { position: relative; justify-content: space-between; }
+  .qform__rank-badge {
+    background: var(--gold); color: var(--chrome); font-size: 11px; font-weight: 700;
+    width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  .qform__check input { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
 
-  .qform__contact-fields { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; padding: 20px; background: var(--paper); border: 1px solid var(--divider); }
-  .qform__contact-fields[hidden] { display: none; }
+  /* Scale */
+  .qform__scale { display: flex; align-items: center; gap: 16px; }
+  .qform__scale-label { font-size: 12px; color: var(--faint-alt); max-width: 11ch; line-height: 1.4; flex-shrink: 0; }
+  .qform__scale-options { display: flex; gap: 8px; flex: 1; justify-content: center; }
+  .qform__scale-opt { flex-direction: column; padding: 12px 10px; min-width: 48px; justify-content: center; gap: 8px; }
+  .qform__scale-opt span { font-size: 15px; font-weight: 500; }
+  @media (max-width: 640px) {
+    .qform__scale { flex-wrap: wrap; }
+    .qform__scale-label { max-width: none; }
+  }
+
+  /* Grid */
+  .qform__grid { display: flex; flex-direction: column; gap: 20px; }
+  .qform__grid-row { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--divider); }
+  .qform__grid-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .qform__grid-row-label { font-size: 14px; color: var(--ink); }
+  .qform__grid-row-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qform__grid-opt { padding: 8px 14px; font-size: 13px; }
+
+  /* Detail / free-text fields */
+  .qform__detail { margin-top: -2px; }
   .qform__field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint-alt); }
-  .qform__field input {
+  .qform__field input,
+  .qform__field textarea {
     font-size: 15px;
     font-weight: 300;
     text-transform: none;
     letter-spacing: normal;
     color: var(--ink);
-    background: var(--sand);
-    border: 1px solid var(--divider);
+    background: #FBF8F2;
+    border: 1px solid rgba(58, 56, 39, 0.16);
     padding: 10px 14px;
+    font-family: inherit;
+    resize: vertical;
   }
-  .qform__field input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .qform__field input:focus-visible,
+  .qform__field textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .qform__field--open textarea { min-height: 84px; }
+
+  /* Closing / contact step */
+  .qform__contact-lead { font-size: 18px; color: var(--ink); margin-bottom: 20px; }
+  .qform__contact-fields { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; padding: 20px; background: var(--paper); border: 1px solid var(--divider); }
+
+  .qform__check { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--body); margin-bottom: 14px; cursor: pointer; }
+  .qform__check input { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
 
   .qform__privacy { font-size: 13px; color: var(--faint); line-height: 1.7; margin-top: 8px; }
   .qform__privacy a { color: var(--ink); border-bottom: 1px solid var(--divider); padding-bottom: 1px; }
@@ -368,7 +762,6 @@ const totalSteps = steps.length + 1; // +1 for the contact/consent step
   .qform__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
   .qform__nav { display: flex; gap: 12px; margin-top: 40px; }
-  .qform__nav[hidden] { display: none; }
   .qform__btn {
     font-size: 12px;
     font-weight: 600;

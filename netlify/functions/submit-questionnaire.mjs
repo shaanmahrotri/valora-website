@@ -29,6 +29,7 @@ export async function handler(event) {
     wantsReport,
     marketingConsent,
     name,
+    organisation,
     email,
   } = payload;
 
@@ -46,9 +47,14 @@ export async function handler(event) {
     return jsonResponse(400, { error: 'Missing required fields' });
   }
 
+  // Structural check only - not every question can be validated as
+  // "answered" server-side (some are conditionally shown/optional based on
+  // client-side logic: showIf follow-ups, open text, detail boxes). Full
+  // re-validation of that branching would duplicate the whole question
+  // schema server-side for a lead-capture survey, which isn't worth it here.
   for (const answer of answers) {
-    if (!answer || typeof answer.id !== 'string' || typeof answer.prompt !== 'string' || !answer.selected) {
-      return jsonResponse(400, { error: 'Every question must be answered' });
+    if (!answer || typeof answer.id !== 'string' || typeof answer.prompt !== 'string' || typeof answer.type !== 'string') {
+      return jsonResponse(400, { error: 'Malformed answer data' });
     }
   }
 
@@ -68,6 +74,7 @@ export async function handler(event) {
     wants_report: wantsReportBool,
     report_consent_given_at: wantsReportBool ? new Date().toISOString() : null,
     name: typeof name === 'string' && name.trim() ? name.trim() : null,
+    organisation: typeof organisation === 'string' && organisation.trim() ? organisation.trim() : null,
     email: trimmedEmail || null,
     marketing_consent: marketingConsentBool,
     marketing_consent_confirmed_at: null,
@@ -162,10 +169,28 @@ async function sendResendEmail({ to, subject, html }) {
   });
 }
 
+function formatAnswerValue(answer) {
+  const { type, value, detail } = answer;
+  let text;
+  if (value == null) {
+    text = '(no answer)';
+  } else if (type === 'grid' && typeof value === 'object' && !Array.isArray(value)) {
+    text = Object.values(value)
+      .map((cell) => `${cell.value}${cell.detail ? ` (${cell.detail})` : ''}`)
+      .join('; ');
+  } else if (Array.isArray(value)) {
+    text = value.length ? value.join(', ') : '(no answer)';
+  } else {
+    text = String(value);
+  }
+  if (detail && type !== 'grid') text += ` — ${detail}`;
+  return text;
+}
+
 async function sendReportEmail(to, name, answers) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hi,';
   const rows = answers
-    .map((a) => `<tr><td style="padding:8px 0;color:#3A3827;">${escapeHtml(a.prompt)}</td><td style="padding:8px 0 8px 16px;color:#5C5A48;">${escapeHtml(a.selected)}</td></tr>`)
+    .map((a) => `<tr><td style="padding:8px 0;color:#3A3827;">${escapeHtml(a.prompt)}</td><td style="padding:8px 0 8px 16px;color:#5C5A48;">${escapeHtml(formatAnswerValue(a))}</td></tr>`)
     .join('');
   const html = `
     <p>${greeting}</p>

@@ -9,10 +9,11 @@ create table if not exists questionnaire_responses (
   questionnaire_slug text not null,
   form_version int not null,
   client_token uuid not null unique, -- idempotency key, one per form load
-  answers jsonb not null,            -- [{ id, prompt, selected }, ...]
+  answers jsonb not null,            -- [{ id, prompt, type, value, detail? }, ...]
   wants_report boolean not null default false,
   report_consent_given_at timestamptz,
   name text,
+  organisation text,
   email text,
   marketing_consent boolean not null default false,
   marketing_consent_confirmed_at timestamptz, -- null until the double opt-in link is confirmed
