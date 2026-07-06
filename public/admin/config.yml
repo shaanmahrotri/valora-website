@@ -120,6 +120,31 @@ collections:
         file: src/content/legal/disclaimer.yaml
         fields: *legal_fields
 
+  - name: questionnaires
+    label: "Questionnaires"
+    folder: src/content/questionnaires
+    extension: yaml
+    format: yaml
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}}"
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: intro, label: "Intro copy", widget: text }
+      - { name: formVersion, label: "Form version (bump when questions change meaningfully)", widget: number, value_type: int, default: 1 }
+      - { name: submitLabel, label: "Submit button label", widget: string, default: "See my results" }
+      - name: questions
+        label: Questions
+        widget: list
+        summary: "{{fields.prompt}}"
+        fields:
+          - { name: id, label: "Question id (must stay unique - don't duplicate when reordering)", widget: string }
+          - { name: prompt, label: Question, widget: text }
+          - name: options
+            label: "Answer options"
+            widget: list
+            field: { name: option, label: Option, widget: string }
+
   - name: insights
     label: Insights
     folder: src/content/insights

@@ -99,4 +99,26 @@ const legal = defineCollection({
   }),
 });
 
-export const collections = { insights, hero, approach, contact, partners, partnersSection, settings, legal };
+// One YAML file per questionnaire, flat in src/content/questionnaires/<slug>.yaml
+// (same folder-collection shape as `partners`, so adding a second
+// questionnaire later is just a new file - no code change). Reachable only
+// at /questionnaire/<slug>, never linked from site nav.
+const questionnaires = defineCollection({
+  type: 'data',
+  schema: z.object({
+    title: z.string(),
+    intro: z.string(),
+    formVersion: z.number(),
+    submitLabel: z.string().default('See my results'),
+    questions: z.array(z.object({
+      id: z.string(),
+      prompt: z.string(),
+      options: z.array(z.string()),
+    })).refine(
+      (qs) => new Set(qs.map((q) => q.id)).size === qs.length,
+      { message: 'Question ids must be unique within a questionnaire' }
+    ),
+  }),
+});
+
+export const collections = { insights, hero, approach, contact, partners, partnersSection, settings, legal, questionnaires };

@@ -7,8 +7,9 @@ interface Props {
   title: string;
   description?: string;
   active?: string;   // about | approach | partners | insights | contact
+  noindex?: boolean; // true for pages that exist but shouldn't be indexed or discoverable via search
 }
-const { title, description = 'Fractional family office architecture.', active = '' } = Astro.props;
+const { title, description = 'Fractional family office architecture.', active = '', noindex = false } = Astro.props;
 
 const settings = await getEntry('settings', 'index');
 const insightsEnabled = settings.data.insightsEnabled;
@@ -21,6 +22,7 @@ const insightsEnabled = settings.data.insightsEnabled;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#E6DDD0" />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

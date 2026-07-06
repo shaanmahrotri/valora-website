@@ -1,0 +1,396 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const questionnaires = await getCollection('questionnaires');
+  return questionnaires.map((entry) => ({
+    params: { slug: entry.id },
+    props: { questionnaire: entry.data },
+  }));
+}
+
+const { slug } = Astro.params;
+const { questionnaire } = Astro.props;
+
+const CHUNK_SIZE = 5;
+const steps: (typeof questionnaire.questions)[] = [];
+for (let i = 0; i < questionnaire.questions.length; i += CHUNK_SIZE) {
+  steps.push(questionnaire.questions.slice(i, i + CHUNK_SIZE));
+}
+const totalSteps = steps.length + 1; // +1 for the contact/consent step
+---
+<Base title={`${questionnaire.title} — Valora`} description={questionnaire.intro} noindex={true}>
+
+  <div class="qpage">
+
+    <header class="qpage__head">
+      <span class="kicker" style="margin-bottom:20px">Questionnaire</span>
+      <div class="gold-rule" style="margin-bottom:32px"></div>
+      <h1 class="qpage__title">{questionnaire.title}</h1>
+      <p class="qpage__intro">{questionnaire.intro}</p>
+    </header>
+
+    <div
+      class="qform"
+      id="qform"
+      data-slug={slug}
+      data-form-version={questionnaire.formVersion}
+    >
+      <div class="qform__progress">
+        <div
+          class="qform__progress-track"
+          role="progressbar"
+          aria-valuemin="1"
+          aria-valuemax={totalSteps}
+          aria-valuenow="1"
+          id="qform-progress-track"
+        >
+          <div class="qform__progress-fill" id="qform-progress-fill"></div>
+        </div>
+        <span class="qform__progress-label" id="qform-progress-label">Step 1 of {totalSteps}</span>
+      </div>
+
+      <form id="qform-form" novalidate>
+        {steps.map((chunk, stepIndex) => (
+          <section class="qform__step" data-step={stepIndex}>
+            {chunk.map((q) => (
+              <fieldset class="qform__question" data-qid={q.id}>
+                <legend>{q.prompt}</legend>
+                {q.options.map((opt) => (
+                  <label class="qform__option">
+                    <input type="radio" name={`q_${q.id}`} value={opt} required />
+                    <span>{opt}</span>
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+          </section>
+        ))}
+
+        <section class="qform__step" data-step={steps.length}>
+          <div class="qform__contact">
+            <p class="qform__contact-lead">Would you like to stay in touch?</p>
+            <p class="qform__contact-note">Both are optional — leave both unchecked to submit anonymously.</p>
+
+            <label class="qform__check">
+              <input type="checkbox" id="wants-report" name="wantsReport" />
+              <span>Email me a copy of my answers</span>
+            </label>
+            <label class="qform__check">
+              <input type="checkbox" id="marketing-consent" name="marketingConsent" />
+              <span>I'd also like Valora Partners to contact me about their services</span>
+            </label>
+
+            <div class="qform__contact-fields" id="contact-fields" hidden>
+              <label class="qform__field">
+                <span>Name (optional)</span>
+                <input type="text" name="name" autocomplete="name" />
+              </label>
+              <label class="qform__field">
+                <span>Email</span>
+                <input type="email" name="email" autocomplete="email" />
+              </label>
+            </div>
+
+            <p class="qform__privacy">
+              See our <a href="/privacy" class="legal__link">Privacy Policy</a> for how we handle your data.
+              You can withdraw consent at any time by emailing
+              <a href="mailto:privacy@valorapartners.co.uk" class="legal__link">privacy@valorapartners.co.uk</a>.
+            </p>
+          </div>
+
+          <div class="qform__hp" aria-hidden="true">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
+          </div>
+        </section>
+      </form>
+
+      <div class="qform__nav">
+        <button type="button" id="qform-back" class="qform__btn qform__btn--ghost" hidden>Back</button>
+        <button type="button" id="qform-next" class="qform__btn qform__btn--gold">Next</button>
+        <button type="button" id="qform-submit" class="qform__btn qform__btn--gold" hidden>{questionnaire.submitLabel}</button>
+      </div>
+
+      <p class="qform__error" id="qform-error" hidden></p>
+
+      <div class="qform__thanks" id="qform-thanks" hidden>
+        <div class="gold-rule" style="margin-bottom:24px"></div>
+        <h2>Thank you</h2>
+        <p id="qform-thanks-message">Your answers have been received.</p>
+      </div>
+    </div>
+
+  </div>
+
+</Base>
+
+<script>
+  const container = document.getElementById('qform') as HTMLElement;
+  const form = document.getElementById('qform-form') as HTMLFormElement;
+  const steps = Array.from(form.querySelectorAll<HTMLElement>('.qform__step'));
+  const totalSteps = steps.length;
+
+  const backBtn = document.getElementById('qform-back') as HTMLButtonElement;
+  const nextBtn = document.getElementById('qform-next') as HTMLButtonElement;
+  const submitBtn = document.getElementById('qform-submit') as HTMLButtonElement;
+  const progressFill = document.getElementById('qform-progress-fill') as HTMLElement;
+  const progressTrack = document.getElementById('qform-progress-track') as HTMLElement;
+  const progressLabel = document.getElementById('qform-progress-label') as HTMLElement;
+  const errorEl = document.getElementById('qform-error') as HTMLElement;
+  const thanks = document.getElementById('qform-thanks') as HTMLElement;
+  const thanksMessage = document.getElementById('qform-thanks-message') as HTMLElement;
+  const nav = document.querySelector('.qform__nav') as HTMLElement;
+
+  const wantsReportCheckbox = document.getElementById('wants-report') as HTMLInputElement;
+  const marketingCheckbox = document.getElementById('marketing-consent') as HTMLInputElement;
+  const contactFields = document.getElementById('contact-fields') as HTMLElement;
+  const emailInput = form.querySelector<HTMLInputElement>('input[name="email"]')!;
+  const nameInput = form.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const honeypot = form.querySelector<HTMLInputElement>('#company')!;
+
+  const slug = container.dataset.slug || '';
+  const formVersion = Number(container.dataset.formVersion || '1');
+  const answersKey = `questionnaire:${slug}:answers`;
+  const stepKey = `questionnaire:${slug}:step`;
+  const clientToken = crypto.randomUUID();
+  const originalSubmitLabel = submitBtn.textContent || 'Submit';
+
+  let current = 0;
+
+  function showStep(index: number) {
+    current = Math.max(0, Math.min(index, totalSteps - 1));
+    steps.forEach((el, i) => { el.hidden = i !== current; });
+    backBtn.hidden = current === 0;
+    const isLast = current === totalSteps - 1;
+    nextBtn.hidden = isLast;
+    submitBtn.hidden = !isLast;
+    errorEl.hidden = true;
+
+    const stepNum = current + 1;
+    progressLabel.textContent = `Step ${stepNum} of ${totalSteps}`;
+    progressTrack.setAttribute('aria-valuenow', String(stepNum));
+    progressFill.style.width = `${(stepNum / totalSteps) * 100}%`;
+    sessionStorage.setItem(stepKey, String(current));
+  }
+
+  function validateStep(index: number): boolean {
+    const stepEl = steps[index];
+    const fieldsets = stepEl.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__question');
+    for (const fs of Array.from(fieldsets)) {
+      const checked = fs.querySelector('input[type="radio"]:checked');
+      if (!checked) {
+        fs.classList.add('qform__question--error');
+        fs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      fs.classList.remove('qform__question--error');
+    }
+    return true;
+  }
+
+  function saveAnswers() {
+    const data: Record<string, string> = {};
+    form.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked').forEach((input) => {
+      data[input.name] = input.value;
+    });
+    sessionStorage.setItem(answersKey, JSON.stringify(data));
+  }
+
+  function restoreAnswers() {
+    const raw = sessionStorage.getItem(answersKey);
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw) as Record<string, string>;
+      Object.entries(data).forEach(([name, value]) => {
+        const input = form.querySelector<HTMLInputElement>(
+          `input[name="${CSS.escape(name)}"][value="${CSS.escape(value)}"]`
+        );
+        if (input) input.checked = true;
+      });
+    } catch {
+      // ignore malformed sessionStorage state
+    }
+  }
+
+  function updateContactVisibility() {
+    contactFields.hidden = !(wantsReportCheckbox.checked || marketingCheckbox.checked);
+  }
+
+  nextBtn.addEventListener('click', () => {
+    if (!validateStep(current)) return;
+    saveAnswers();
+    showStep(current + 1);
+  });
+
+  backBtn.addEventListener('click', () => showStep(current - 1));
+  wantsReportCheckbox.addEventListener('change', updateContactVisibility);
+  marketingCheckbox.addEventListener('change', updateContactVisibility);
+
+  submitBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const wantsReport = wantsReportCheckbox.checked;
+    const marketingConsent = marketingCheckbox.checked;
+
+    if ((wantsReport || marketingConsent) && !email) {
+      errorEl.hidden = false;
+      errorEl.textContent = 'Please enter an email address to continue.';
+      return;
+    }
+
+    const answers = Array.from(form.querySelectorAll<HTMLFieldSetElement>('fieldset.qform__question')).map((fs) => {
+      const legend = fs.querySelector('legend')?.textContent ?? '';
+      const checked = fs.querySelector<HTMLInputElement>('input[type="radio"]:checked');
+      return { id: fs.dataset.qid, prompt: legend, selected: checked ? checked.value : null };
+    });
+
+    const payload = {
+      questionnaireSlug: slug,
+      formVersion,
+      clientToken,
+      company: honeypot.value,
+      answers,
+      wantsReport,
+      marketingConsent,
+      name: nameInput.value.trim(),
+      email,
+    };
+
+    errorEl.hidden = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    try {
+      const res = await fetch('/.netlify/functions/submit-questionnaire', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Request failed');
+
+      sessionStorage.removeItem(answersKey);
+      sessionStorage.removeItem(stepKey);
+      form.hidden = true;
+      nav.hidden = true;
+      thanks.hidden = false;
+      thanksMessage.textContent = marketingConsent
+        ? "Your answers have been received. Check your inbox to confirm you'd like to hear from us."
+        : wantsReport
+          ? 'Your answers have been received — a copy is on its way to your inbox.'
+          : 'Your answers have been received.';
+    } catch {
+      errorEl.hidden = false;
+      errorEl.textContent = 'Something went wrong sending your answers. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalSubmitLabel;
+    }
+  });
+
+  restoreAnswers();
+  updateContactVisibility();
+  const savedStep = Number(sessionStorage.getItem(stepKey) ?? '0');
+  showStep(Number.isFinite(savedStep) ? savedStep : 0);
+</script>
+
+<style>
+  .qpage { padding: 80px var(--pad) 104px; max-width: 680px; }
+
+  .qpage__title { font-size: 42px; font-weight: 300; color: var(--ink); line-height: 1.2; letter-spacing: -0.3px; margin-bottom: 14px; text-wrap: balance; }
+  .qpage__intro { font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.8; max-width: 56ch; }
+  .qpage__head { margin-bottom: 52px; }
+
+  .qform { border-top: 1px solid var(--divider); padding-top: 40px; }
+
+  .qform__progress { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .qform__progress-track { flex: 1; height: 3px; background: var(--divider); position: relative; }
+  .qform__progress-fill { height: 100%; background: var(--gold); transition: width 0.25s ease; }
+  .qform__progress-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint-alt); white-space: nowrap; }
+
+  .qform__step { display: flex; flex-direction: column; gap: 36px; }
+  .qform__step[hidden] { display: none; }
+
+  .qform__question legend { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin-bottom: 16px; padding: 0; }
+  .qform__question { border: none; padding: 0; }
+  .qform__question--error legend { color: var(--gold-ink); }
+
+  .qform__option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border: 1px solid var(--divider);
+    background: var(--paper);
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--body);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .qform__option:hover { border-color: var(--gold-deep); }
+  .qform__option input { accent-color: var(--gold); width: 16px; height: 16px; flex-shrink: 0; }
+  .qform__option:has(input:checked) { border-color: var(--gold); background: rgba(254, 173, 0, 0.08); }
+
+  .qform__contact-lead { font-size: 18px; color: var(--ink); margin-bottom: 6px; }
+  .qform__contact-note { font-size: 13px; color: var(--faint); margin-bottom: 20px; }
+
+  .qform__check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--body);
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .qform__check input { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
+
+  .qform__contact-fields { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; padding: 20px; background: var(--paper); border: 1px solid var(--divider); }
+  .qform__contact-fields[hidden] { display: none; }
+  .qform__field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint-alt); }
+  .qform__field input {
+    font-size: 15px;
+    font-weight: 300;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+    background: var(--sand);
+    border: 1px solid var(--divider);
+    padding: 10px 14px;
+  }
+  .qform__field input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  .qform__privacy { font-size: 13px; color: var(--faint); line-height: 1.7; margin-top: 8px; }
+  .qform__privacy a { color: var(--ink); border-bottom: 1px solid var(--divider); padding-bottom: 1px; }
+  .qform__privacy a:hover { border-color: var(--gold); }
+
+  .qform__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .qform__nav { display: flex; gap: 12px; margin-top: 40px; }
+  .qform__nav[hidden] { display: none; }
+  .qform__btn {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 15px 28px;
+    border: 1px solid transparent;
+    transition: opacity 0.15s, border-color 0.15s;
+  }
+  .qform__btn--gold { background: var(--gold); color: var(--chrome); margin-left: auto; }
+  .qform__btn--gold:hover { opacity: 0.88; }
+  .qform__btn--gold:disabled { opacity: 0.6; cursor: not-allowed; }
+  .qform__btn--ghost { background: none; border-color: var(--divider); color: var(--muted); }
+  .qform__btn--ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  .qform__error { color: var(--gold-ink); font-size: 13px; margin-top: 16px; }
+
+  .qform__thanks { padding-top: 8px; }
+  .qform__thanks h2 { font-size: 32px; font-weight: 300; color: var(--ink); margin-bottom: 12px; }
+  .qform__thanks p { font-size: 15px; color: var(--muted); line-height: 1.8; }
+
+  @media (max-width: 900px) {
+    .qpage { padding: 40px var(--pad) 96px; }
+  }
+</style>
