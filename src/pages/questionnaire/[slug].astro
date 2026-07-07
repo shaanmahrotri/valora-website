@@ -706,10 +706,11 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   .qform__option:has(input:disabled):not(:has(input:checked)) { opacity: 0.45; cursor: not-allowed; }
 
   .qform__options { display: flex; flex-direction: column; gap: 8px; }
-  .qform__option--rank { position: relative; justify-content: space-between; }
+  .qform__option--rank { position: relative; }
   .qform__rank-badge {
     background: var(--gold); color: var(--chrome); font-size: 11px; font-weight: 700;
     width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    margin-left: auto;
   }
 
   /* Scale */

@@ -98,12 +98,14 @@ export async function handler(event) {
     });
 
     if (!res.ok) {
+      console.error('Supabase insert failed', res.status, await res.text());
       return jsonResponse(502, { error: 'Could not save your answers' });
     }
 
     const inserted = await res.json();
     insertedRow = Array.isArray(inserted) ? inserted[0] : null;
-  } catch {
+  } catch (err) {
+    console.error('Supabase insert threw', err);
     return jsonResponse(502, { error: 'Could not save your answers' });
   }
 
