@@ -22,8 +22,11 @@ an access/erasure request once the questionnaire is live.
 5. In Resend, verify a sending domain (adds SPF/DKIM/DMARC DNS records to
    the Valora domain) — required before `NOTIFY_EMAIL_FROM` can send.
 6. Set up a free external uptime pinger (UptimeRobot or cron-job.org)
-   hitting the live site's homepage weekly, so the Supabase free-tier
-   project doesn't auto-pause from inactivity between prospect sends.
+   hitting `/.netlify/functions/keepalive` every few days, so the Supabase
+   free-tier project doesn't auto-pause from inactivity between prospect
+   sends. This has to be the `keepalive` function specifically, not the
+   site's homepage — the homepage never talks to Supabase, so pinging it
+   does nothing for Supabase's own inactivity timer.
 7. **Before sharing the questionnaire link with anyone**, verify RLS is
    actually blocking the anon key:
    ```bash
