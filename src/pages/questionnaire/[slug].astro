@@ -569,7 +569,12 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   });
 
   nextBtn.addEventListener('click', () => {
-    if (!validateStep(current)) return;
+    if (!validateStep(current)) {
+      errorEl.hidden = false;
+      errorEl.textContent = 'Please answer the highlighted question before continuing.';
+      return;
+    }
+    errorEl.hidden = true;
     saveProgress();
     const next = findApplicableStep(current, 1);
     if (next !== -1) showStep(next);
@@ -581,7 +586,11 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   });
 
   submitBtn.addEventListener('click', async () => {
-    if (!validateStep(current)) return;
+    if (!validateStep(current)) {
+      errorEl.hidden = false;
+      errorEl.textContent = 'Please answer the highlighted question before submitting.';
+      return;
+    }
 
     const email = emailInput?.value.trim() || '';
     const wantsReport = gateAnsweredYes();
@@ -673,6 +682,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
 
   .qform__q { border: none; padding: 0; display: flex; flex-direction: column; gap: 14px; }
   .qform__prompt { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0; padding: 0; }
+  .qform__q--error { border-left: 3px solid var(--gold-ink); margin-left: -17px; padding-left: 14px; }
   .qform__q--error .qform__prompt { color: var(--gold-ink); }
   .qform__note { font-size: 13px; color: var(--faint); line-height: 1.6; }
 
