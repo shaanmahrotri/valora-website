@@ -178,6 +178,7 @@ function formatAnswerValue(answer) {
     text = '(no answer)';
   } else if (type === 'grid' && typeof value === 'object' && !Array.isArray(value)) {
     text = Object.values(value)
+      .filter((cell) => cell.value) // an optional row (e.g. "Other") left blank has no value to show
       .map((cell) => `${cell.value}${cell.detail ? ` (${cell.detail})` : ''}`)
       .join('; ');
   } else if (Array.isArray(value)) {

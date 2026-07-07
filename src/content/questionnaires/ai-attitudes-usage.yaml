@@ -11,9 +11,10 @@ gate:
   note: "Your responses are collected anonymously unless you opt in above. Any aggregate findings shared with the group are anonymised - no individual response is ever attributed without your consent."
 
 sections:
-  - heading: "1. Orientation - How AI Actually Works"
+  - heading: "A. Orientation - How AI Actually Works"
     questions:
       - id: "q1a"
+        displayNumber: "Q1"
         type: "scale"
         prompt: "On a scale of 1-5, how would you rate your own overall fluency in how AI actually works?"
         scaleMin: 1
@@ -30,9 +31,10 @@ sections:
           - "The difference between the AI model itself and the orchestration layer that connects it to your other systems"
           - "None of these - I'd like them all explained"
 
-  - heading: "2. Exposure - Where AI Already Resides Around You"
+  - heading: "B. Exposure - Where AI Already Resides Around You"
     questions:
       - id: "q2a"
+        displayNumber: "Q2"
         type: "scale"
         prompt: "How confident are you that you know every point at which AI already touches your office - not just tools you've deliberately adopted, but AI embedded in the platforms, banks and advisers around you?"
         scaleMin: 1
@@ -40,26 +42,32 @@ sections:
         scaleMinLabel: "Not at all confident"
         scaleMaxLabel: "Completely confident"
       - id: "q2b"
+        displayNumber: "Q3"
         type: "single"
         prompt: "Do your providers, banks and advisers tell you, unprompted, how they use AI and how they treat your data?"
         options:
           - "Yes, on both"
           - "Yes, on usage only"
+          - "Yes, on treatment"
+          - "Sometimes"
           - "No, on neither"
           - "Not sure"
         detailPrompt: "Tell us more (optional)"
         detailShowIfValues:
           - "Yes, on both"
           - "Yes, on usage only"
+          - "Yes, on treatment"
 
-  - heading: "3. Internal Tools & Platforms - AI in Your Operating Stack"
+  - heading: "C. Internal Tools & Platforms - AI in Your Operating Stack"
     questions:
       - id: "q3"
+        displayNumber: "Q4"
         type: "grid"
         prompt: "Thinking about the systems your office actually runs day to day, for each of the following: is AI already embedded in what you use, as far as you know?"
         gridColumns:
           - "Yes"
           - "No"
+          - "Not employed/not relevant"
           - "Not sure"
         gridRows:
           - { id: "ledger", label: "General ledger / partnership accounting system" }
@@ -67,10 +75,12 @@ sections:
           - { id: "research", label: "Investment research, manager due-diligence & DDQ tools" }
           - { id: "taxlegal", label: "Tax / legal reference & document-drafting tools" }
           - { id: "payments", label: "Payment processing / treasury and bill-pay platforms" }
-          - { id: "other", label: "Other (please specify)" }
+          - { id: "fundaccounting", label: "Fund accounting/NAV administration" }
+          - { id: "other", label: "Other (please specify)", optional: true }
         gridFollowUpColumn: "Yes"
         gridFollowUpPrompt: "If yes - what functionality has AI added?"
       - id: "q4"
+        displayNumber: "Q5"
         type: "single"
         prompt: "Do you know which of your tools sit on a platform you share with other clients of that provider, versus one where your office's data stays in an environment you control?"
         options:
@@ -79,6 +89,7 @@ sections:
           - "No, I've never thought about it this way"
         detailPrompt: "Has this ever mattered to a decision you've made? (optional)"
       - id: "q5"
+        displayNumber: "Q6"
         type: "single"
         prompt: "If a member of your own team were putting sensitive family information into a consumer AI tool - ChatGPT, Claude, Gemini, a personal account, anything outside your controlled systems - right now, would you know?"
         options:
@@ -88,10 +99,11 @@ sections:
           - "No idea"
         detailPrompt: "Anything you'd like to add? (optional)"
 
-  - heading: "4. Agentic Workflows & Internal Efficiency"
+  - heading: "D. Agentic Workflows & Internal Efficiency"
     intro: "For context: an \"agentic\" workflow is one where AI does more than answer a question in a chat window - it moves information between systems on your behalf. A working example: a capital call notice arrives; it's read and checked automatically against your records; a summary is prepared for approval; only once a person approves does anything get staged for payment - and release itself still requires a second, separate human step. The shape that matters is automation on the handoffs, humans on the decisions that carry consequence."
     questions:
       - id: "q6"
+        displayNumber: "Q7"
         type: "single"
         prompt: "Has your office built or commissioned anything like this - an agentic workflow designed around one of its own processes?"
         options:
@@ -99,9 +111,14 @@ sections:
           - "We've piloted something"
           - "No, but we've discussed it"
           - "No, it's never come up"
-        detailPrompt: "Tell us more (optional)"
+        detailPrompt: "Please outline the project built or considered"
+        detailShowIfValues:
+          - "Yes, in at least one process"
+          - "We've piloted something"
+          - "No, but we've discussed it"
       - id: "q7"
-        type: "single"
+        displayNumber: "Q8"
+        type: "multi"
         prompt: "What's held you back, if anything, from automating more of your internal workflows this way?"
         options:
           - "Cost"
@@ -111,18 +128,21 @@ sections:
           - "Not knowing where to start"
           - "Nothing - we're actively pursuing this"
           - "Other: please specify"
+        maxSelections: 2
         detailPrompt: "Tell us more / please specify (optional)"
         showIfQuestionId: "q6"
         showIfValues:
           - "No, but we've discussed it"
           - "No, it's never come up"
       - id: "q8"
+        displayNumber: "Q9"
         type: "open"
         prompt: "If one internal process could be meaningfully accelerated this way, without losing the human sign-off, which would you choose?"
 
-  - heading: "5. Family and Next Generation"
+  - heading: "E. Family and Next Generation"
     questions:
       - id: "q9"
+        displayNumber: "Q10"
         type: "single"
         prompt: "How is the next generation in your family engaging with AI in relation to their own affairs?"
         options:
@@ -133,9 +153,10 @@ sections:
           - "Not applicable"
         detailPrompt: "Tell us more (optional)"
 
-  - heading: "6. Risk Awareness"
+  - heading: "F. Risk Awareness"
     questions:
       - id: "q10"
+        displayNumber: "Q11"
         type: "multi"
         prompt: "Which of these concerns you most for a family office like yours, right now? Select one or two."
         options:
@@ -147,6 +168,7 @@ sections:
         maxSelections: 2
         detailPrompt: "Why? (optional)"
       - id: "q11"
+        displayNumber: "Q12"
         type: "single"
         prompt: "Has your office experienced, or come close to, anything you'd now recognise as an AI-related incident - a fabricated figure, a cloned voice, a document that looked right but wasn't?"
         options:
@@ -157,9 +179,10 @@ sections:
         detailShowIfValues:
           - "Yes"
 
-  - heading: "7. Governance"
+  - heading: "G. Governance"
     questions:
       - id: "q12"
+        displayNumber: "Q13"
         type: "single"
         prompt: "Does your office have any policy or guardrails, formal or informal, on how AI may be used - including which tools staff may use, and for what?"
         options:
@@ -167,8 +190,8 @@ sections:
           - "Yes, an informal shared understanding"
           - "No, but it's been discussed"
           - "No, and it hasn't come up"
-        detailPrompt: "Tell us more (optional)"
       - id: "q13"
+        displayNumber: "Q14"
         type: "single"
         prompt: "Who, if anyone, is accountable for AI-related decisions and oversight in your office today?"
         options:
@@ -178,13 +201,13 @@ sections:
           - "Combination"
           - "Outsourced provider"
           - "No one at present"
-        detailPrompt: "Tell us more (optional)"
 
-  - heading: "8. Operational Impact and Outcomes"
+  - heading: "H. Operational Impact and Outcomes"
     questions:
       - id: "q14"
+        displayNumber: "Q15"
         type: "multi"
-        prompt: "Where, if anywhere, has AI made a measurable difference to how your office works?"
+        prompt: "Which process(es) has AI improved, or where hasn't it added value despite the effort?"
         options:
           - "Time saved on reporting or admin"
           - "Faster research or due diligence"
@@ -192,11 +215,12 @@ sections:
           - "Cost reduction"
           - "Tried, but no measurable difference"
           - "Haven't tried"
-        detailPrompt: "Where, specifically - and where it hasn't worked despite the effort (optional)"
+        detailPrompt: "Where, specifically (optional)"
 
-  - heading: "9. Future Developments"
+  - heading: "I. Future Developments"
     questions:
       - id: "q15"
+        displayNumber: "Q16"
         type: "single"
         prompt: "Over the next 12 months, is your office's posture toward AI best described as:"
         options:
@@ -205,8 +229,8 @@ sections:
           - "Holding roughly steady"
           - "Pulling back and tightening controls"
           - "Yet to decide"
-        detailPrompt: "Why? (optional)"
       - id: "q16"
+        displayNumber: "Q17"
         type: "single"
         prompt: "Do you see meaningful AI capability as something your office should be prepared to invest in properly, or something that should cost little to nothing?"
         options:
@@ -214,8 +238,8 @@ sections:
           - "Some investment, but modestly"
           - "Should be low-cost or free"
           - "Haven't thought about it this way"
-        detailPrompt: "Tell us more (optional)"
       - id: "q17"
+        displayNumber: "Q18"
         type: "multi"
         prompt: "Looking beyond the next 12 months, which of these do you expect AI and agentic developments to mean for your office, over the longer term?"
         options:
@@ -227,7 +251,10 @@ sections:
           - "None of these / too early to say"
           - "Other: please specify"
         detailPrompt: "Tell us more (optional)"
+        detailShowIfValues:
+          - "Other: please specify"
       - id: "q18"
+        displayNumber: "Q19"
         type: "rankTwo"
         prompt: "Which of these would be most valuable to explore together in a facilitated session? Pick your top two, in order - the first you select is ranked first."
         options:
@@ -237,6 +264,7 @@ sections:
           - "Incident response and fraud"
           - "Practical automation and opportunity"
       - id: "q19"
+        displayNumber: "Q20"
         type: "open"
         prompt: "What's the one AI-related question about your own family office that you don't currently have a good answer to?"
 

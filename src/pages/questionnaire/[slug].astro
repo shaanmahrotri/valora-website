@@ -96,7 +96,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
                 data-show-if-values={q.showIfValues ? JSON.stringify(q.showIfValues) : ''}
                 hidden={Boolean(q.showIfQuestionId)}
               >
-                <legend class="qform__prompt">{q.prompt}</legend>
+                <legend class="qform__prompt">{q.displayNumber && <span class="qform__q-number">{q.displayNumber}.</span>} {q.prompt}</legend>
 
                 {q.type === 'scale' && (
                   <div class="qform__scale">
@@ -133,12 +133,12 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
                 {q.type === 'grid' && (
                   <div class="qform__grid" data-follow-col={q.gridFollowUpColumn ?? ''}>
                     {q.gridRows?.map((row) => (
-                      <div class="qform__grid-row" data-row-id={row.id}>
+                      <div class="qform__grid-row" data-row-id={row.id} data-optional={row.optional ? 'true' : ''}>
                         <p class="qform__grid-row-label">{row.label}</p>
                         <div class="qform__grid-row-opts">
                           {q.gridColumns?.map((col) => (
                             <label class="qform__grid-opt">
-                              <input type="radio" name={`q_${q.id}__${row.id}`} value={col} required />
+                              <input type="radio" name={`q_${q.id}__${row.id}`} value={col} required={!row.optional} />
                               <span>{col}</span>
                             </label>
                           ))}
@@ -417,6 +417,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
       if (type === 'grid') {
         const rows = fs.querySelectorAll<HTMLElement>('.qform__grid-row');
         for (const row of Array.from(rows)) {
+          if (row.dataset.optional === 'true') continue; // e.g. an "Other" row - can be left blank
           if (!row.querySelector('input[type="radio"]:checked')) {
             fs.classList.add('qform__q--error');
             fs.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -682,6 +683,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
 
   .qform__q { border: none; padding: 0; display: flex; flex-direction: column; gap: 14px; }
   .qform__prompt { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0; padding: 0; }
+  .qform__q-number { font-weight: 600; color: var(--faint-alt); }
   .qform__q--error { border-left: 3px solid var(--gold-ink); margin-left: -17px; padding-left: 14px; }
   .qform__q--error .qform__prompt { color: var(--gold-ink); }
   .qform__note { font-size: 13px; color: var(--faint); line-height: 1.6; }

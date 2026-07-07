@@ -128,6 +128,10 @@ const questionOptionalFields = {
 const questionSchema = z.object({
   id: z.string(),
   type: z.enum(['scale', 'single', 'multi', 'rankTwo', 'grid', 'open']),
+  // Shown before the prompt as "Q1.", "Q2." etc - omitted (e.g. a question
+  // that's a continuation of the previous one, or a question deliberately
+  // left out of the numbered sequence) renders with no prefix at all.
+  displayNumber: z.string().optional(),
   prompt: z.string(),
   scaleMin: z.number().optional(),
   scaleMax: z.number().optional(),
@@ -136,7 +140,11 @@ const questionSchema = z.object({
   options: z.array(z.string()).optional(), // single / multi / rankTwo
   maxSelections: z.number().optional(),    // multi
   gridColumns: z.array(z.string()).optional(),
-  gridRows: z.array(z.object({ id: z.string(), label: z.string() })).optional(),
+  gridRows: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    optional: z.boolean().optional(), // true = this row can be left blank, e.g. an "Other" row
+  })).optional(),
   gridFollowUpColumn: z.string().optional(),
   gridFollowUpPrompt: z.string().optional(),
   ...questionOptionalFields,
