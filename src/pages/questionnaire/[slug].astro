@@ -596,7 +596,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
     const wantsReport = gateAnsweredYes();
     const marketingConsent = marketingCheckbox?.checked ?? false;
 
-    if (wantsReport && closing && !email) {
+    if (wantsReport && isClosingStep(current) && !email) {
       errorEl.hidden = false;
       errorEl.textContent = 'Please enter an email address to continue.';
       return;
