@@ -102,10 +102,14 @@ async function unsubscribeFromResend(email) {
 }
 
 function verifyToken(token) {
-  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  if (!token || typeof token !== 'string') return null;
+  // Exactly base64url(payload) + '.' + 64-hex HMAC, nothing more - see the same
+  // guard in confirm-subscription.mjs (kept as a hand-maintained duplicate per
+  // the no-shared-modules convention). Rejecting any appended segment closes the
+  // reflected-XSS vector where the raw token is echoed back into this page.
+  if (!/^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/.test(token)) return null;
 
   const [encoded, signature] = token.split('.');
-  if (!encoded || !signature) return null;
 
   const expected = crypto.createHmac('sha256', CONSENT_TOKEN_SECRET).update(encoded).digest('hex');
   const expectedBuf = Buffer.from(expected, 'hex');
@@ -122,6 +126,12 @@ function verifyToken(token) {
   }
 
   if (!payload || typeof payload.id !== 'string' || typeof payload.email !== 'string' || typeof payload.iat !== 'number') {
+    return null;
+  }
+  // Purpose-bound: only an unsubscribe token is valid here, so a confirm token
+  // can't be replayed against this endpoint. (No expiry check by design - an
+  // unsubscribe link must keep working indefinitely.)
+  if (payload.purpose !== 'unsubscribe') {
     return null;
   }
 
@@ -144,9 +154,26 @@ function extractPostedToken(event) {
 function htmlResponse(statusCode, body) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      // No scripts, no images on this page - `default-src 'none'` blocks both,
+      // so no injected <script> could ever execute here. Only the Google-Fonts
+      // stylesheet/fonts, the inline <style>, and the self-posting form pass.
+      'Content-Security-Policy':
+        "default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff',
+      // The token lives in this page's URL - never leak it in a Referer header.
+      'Referrer-Policy': 'no-referrer',
+    },
     body,
   };
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
 }
 
 function shell(title, bodyHtml) {
@@ -196,7 +223,7 @@ function unsubscribePage(token) {
     `<h1>Unsubscribe</h1>
      <p>Click below to stop receiving marketing emails from Valora Partners.</p>
      <form method="POST">
-       <input type="hidden" name="t" value="${token}" />
+       <input type="hidden" name="t" value="${escapeHtml(token)}" />
        <button type="submit">Unsubscribe</button>
      </form>`
   );
@@ -212,7 +239,7 @@ function unsubscribedPage() {
 function expiredPage() {
   return shell(
     'Link not valid',
-    `<h1>Link not valid</h1><p>This unsubscribe link is not valid, or the request could not be completed. To stop receiving marketing emails from Valora Partners, use the unsubscribe link in any recent email from us, or contact us at <a href="mailto:privacy@valorapartners.co.uk">privacy@valorapartners.co.uk</a>.</p>`
+    `<h1>Link not valid</h1><p>This unsubscribe link is not valid, or the request could not be completed. To stop receiving marketing emails from Valora Partners, use the unsubscribe link in any recent email from us, or contact us at <a href="mailto:datacontroller@valorapartners.co.uk">datacontroller@valorapartners.co.uk</a>.</p>`
   );
 }
 

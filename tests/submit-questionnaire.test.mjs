@@ -26,7 +26,7 @@ function basePayload(overrides = {}) {
   return {
     questionnaireSlug: 'family-office-tech',
     formVersion: 1,
-    clientToken: 'client-token-aaaa-bbbb',
+    clientToken: '11111111-2222-4333-8444-555555555555',
     answers: [{ id: 'q1', prompt: 'Question one?', type: 'single', value: 'Yes' }],
     wantsReport: false,
     marketingConsent: false,
@@ -48,6 +48,16 @@ function insertRule(insertedRow) {
   };
 }
 
+// The pre-insert email rate-limit query (GET .../questionnaire_responses?email=...
+// &select=id). Returns `existingCount` rows already carrying this email in the
+// window - 0 by default (not limited); RATE_LIMIT_MAX (5) or more trips the limit.
+function rateLimitRule(existingCount = 0) {
+  return {
+    match: (url, method) => url.includes('/rest/v1/questionnaire_responses') && method === 'GET',
+    respond: () => jsonResponse(200, Array.from({ length: existingCount }, (_, i) => ({ id: `existing-${i}` }))),
+  };
+}
+
 function resendEmailsRule(capturedEmails) {
   return {
     match: (url, method) => url === 'https://api.resend.com/emails' && method === 'POST',
@@ -63,7 +73,7 @@ describe('submit-questionnaire.mjs - happy path: report + marketing consent + in
     const { handler } = await loadSubmit({ NOTIFY_EMAIL_TO: 'internal@valorapartners.co.uk' });
     const insertedRow = { id: 'row-xyz-999' };
     const captured = [];
-    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+    t.mock.method(globalThis, 'fetch', routedFetch([rateLimitRule(), insertRule(insertedRow), resendEmailsRule(captured)]));
 
     const res = await handler(
       postEvent(basePayload({ wantsReport: true, marketingConsent: true }))
@@ -114,7 +124,7 @@ describe('submit-questionnaire.mjs - emailShell backward compatibility (no 2nd a
     const { handler } = await loadSubmit({ NOTIFY_EMAIL_TO: 'internal@valorapartners.co.uk' });
     const insertedRow = { id: 'row-internal-only' };
     const captured = [];
-    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+    t.mock.method(globalThis, 'fetch', routedFetch([rateLimitRule(), insertRule(insertedRow), resendEmailsRule(captured)]));
 
     const res = await handler(postEvent(basePayload({ wantsReport: false, marketingConsent: false })));
 
@@ -128,11 +138,11 @@ describe('submit-questionnaire.mjs - emailShell backward compatibility (no 2nd a
 });
 
 describe('submit-questionnaire.mjs - report-only submission (no marketing consent)', () => {
-  test('report email still gets its own unsubscribe link; no confirmation email is sent', async (t) => {
+  test('report email is sent but carries NO marketing unsubscribe link; no confirmation email is sent', async (t) => {
     const { handler } = await loadSubmit();
     const insertedRow = { id: 'row-report-only' };
     const captured = [];
-    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+    t.mock.method(globalThis, 'fetch', routedFetch([rateLimitRule(), insertRule(insertedRow), resendEmailsRule(captured)]));
 
     const res = await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: false })));
 
@@ -140,7 +150,27 @@ describe('submit-questionnaire.mjs - report-only submission (no marketing consen
     assert.equal(captured.length, 1, 'no NOTIFY_EMAIL_TO and no marketing consent -> only the report email');
     const [report] = captured;
     assert.equal(report.subject, 'Your Valora Partners questionnaire results');
-    assert.match(report.html, /Unsubscribe from marketing emails/);
+    // A transactional report the user asked for must not advertise an
+    // unsubscribe for a marketing list they never joined.
+    assert.doesNotMatch(report.html, /Unsubscribe from marketing emails/);
+    assert.doesNotMatch(report.html, /\/\.netlify\/functions\/unsubscribe\?t=/);
+  });
+
+  test('rate-limited email (>= RATE_LIMIT_MAX recent rows) -> silent 200, no insert, no email', async (t) => {
+    const { handler } = await loadSubmit({ NOTIFY_EMAIL_TO: 'internal@valorapartners.co.uk' });
+    const captured = [];
+    const fetchMock = t.mock.method(
+      globalThis,
+      'fetch',
+      routedFetch([rateLimitRule(5), insertRule({ id: 'should-not-be-used' }), resendEmailsRule(captured)])
+    );
+
+    const res = await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: true })));
+
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(JSON.parse(res.body), { ok: true });
+    assert.equal(captured.length, 0, 'no email may be sent once rate-limited');
+    assert.equal(fetchMock.mock.calls.length, 1, 'only the rate-limit lookup runs - no insert, no send');
   });
 });
 
@@ -151,6 +181,7 @@ describe('submit-questionnaire.mjs - other behaviour', () => {
       globalThis,
       'fetch',
       routedFetch([
+        rateLimitRule(),
         {
           match: (url, method) => url.includes('/rest/v1/questionnaire_responses') && method === 'POST',
           respond: () => jsonResponse(201, []), // no row returned - duplicate insert
@@ -162,7 +193,7 @@ describe('submit-questionnaire.mjs - other behaviour', () => {
 
     assert.equal(res.statusCode, 200);
     assert.deepEqual(JSON.parse(res.body), { ok: true });
-    assert.equal(fetchMock.mock.calls.length, 1, 'only the insert attempt - no email tasks should run at all');
+    assert.equal(fetchMock.mock.calls.length, 2, 'rate-limit lookup + insert attempt only - no email tasks should run at all');
   });
 
   test('malformed JSON body -> 400 Invalid JSON, no fetch calls', async (t) => {
@@ -215,7 +246,7 @@ describe('submit-questionnaire.mjs - SITE_URL resolves to the current deploy, no
     });
     const insertedRow = { id: 'row-xyz-999' };
     const captured = [];
-    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+    t.mock.method(globalThis, 'fetch', routedFetch([rateLimitRule(), insertRule(insertedRow), resendEmailsRule(captured)]));
 
     await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: true })));
 
@@ -231,7 +262,7 @@ describe('submit-questionnaire.mjs - SITE_URL resolves to the current deploy, no
     const { handler } = await loadSubmit({ URL: 'https://valorapartners.co.uk', DEPLOY_BASE_URL: undefined });
     const insertedRow = { id: 'row-xyz-999' };
     const captured = [];
-    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+    t.mock.method(globalThis, 'fetch', routedFetch([rateLimitRule(), insertRule(insertedRow), resendEmailsRule(captured)]));
 
     await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: true })));
 

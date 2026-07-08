@@ -20,6 +20,25 @@ const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
 // Netlify UI would otherwise produce a double slash before "/.netlify/...".
 const SITE_URL = (process.env.DEPLOY_BASE_URL || process.env.URL || '').replace(/\/+$/, '');
 
+// Abuse guard for this public, unauthenticated endpoint (no CAPTCHA): cap how
+// many submissions may carry the same email inside a rolling window. Over the
+// cap, the request is treated exactly like a tripped honeypot - a silent 200
+// with no DB write and no email - so the verified sending domain can't be used
+// to mail (or re-mail) an arbitrary third party at will, and a non-consenting
+// person's address can't be written to the table on repeat. This does not stop
+// a distributed attacker rotating a fresh email each time (that needs a
+// CAPTCHA / per-IP control) - it closes the flood-one-victim vector, which is
+// the higher-harm one.
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+
+// Upper bounds so an unauthenticated caller can't post a giant payload to
+// bloat the jsonb column or generate an oversized report email.
+const MAX_ANSWERS = 200;
+const MAX_ANSWERS_BYTES = 100_000;
+const MAX_TEXT_FIELD_LEN = 2000;
+const MAX_EMAIL_LEN = 254;
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed' });
@@ -59,6 +78,18 @@ export async function handler(event) {
     return jsonResponse(400, { error: 'Missing required fields' });
   }
 
+  // clientToken is the idempotency key and the table's unique `uuid` column;
+  // the real form always sends crypto.randomUUID(). Reject anything that isn't
+  // a UUID so a malformed value fails as a clean 400 rather than a Postgres
+  // type error surfaced to the user as a generic 502.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientToken)) {
+    return jsonResponse(400, { error: 'Missing required fields' });
+  }
+
+  if (answers.length > MAX_ANSWERS || JSON.stringify(answers).length > MAX_ANSWERS_BYTES) {
+    return jsonResponse(400, { error: 'Submission too large' });
+  }
+
   // Structural check only - not every question can be validated as
   // "answered" server-side (some are conditionally shown/optional based on
   // client-side logic: showIf follow-ups, open text, detail boxes). Full
@@ -74,8 +105,23 @@ export async function handler(event) {
   const marketingConsentBool = Boolean(marketingConsent);
   const trimmedEmail = typeof email === 'string' ? email.trim() : '';
 
+  if (
+    (typeof name === 'string' && name.length > MAX_TEXT_FIELD_LEN) ||
+    (typeof organisation === 'string' && organisation.length > MAX_TEXT_FIELD_LEN) ||
+    trimmedEmail.length > MAX_EMAIL_LEN
+  ) {
+    return jsonResponse(400, { error: 'Submission too large' });
+  }
+
   if ((wantsReportBool || marketingConsentBool) && !isValidEmail(trimmedEmail)) {
     return jsonResponse(400, { error: 'A valid email is required' });
+  }
+
+  // Rate-limit by email before any write or send (see RATE_LIMIT_MAX). Silent
+  // 200 on trip, same as the honeypot - no signal to an abuser that anything
+  // was blocked.
+  if (trimmedEmail && (await isEmailRateLimited(trimmedEmail))) {
+    return jsonResponse(200, { ok: true });
   }
 
   const row = {
@@ -129,13 +175,22 @@ export async function handler(event) {
 
   const emailTasks = [];
 
+  // Only attach a marketing "unsubscribe" link to mail that is actually tied
+  // to marketing consent. A report-only submission (no marketing consent) is a
+  // transactional email the person explicitly asked for - it shouldn't carry,
+  // and previously wrongly carried, an unsubscribe link for a list they never
+  // joined.
+  const marketingUnsubscribeUrl = marketingConsentBool && trimmedEmail && insertedRow.id
+    ? buildUnsubscribeUrl(insertedRow.id, trimmedEmail)
+    : null;
+
   if (wantsReportBool && trimmedEmail) {
-    emailTasks.push(sendReportEmail(trimmedEmail, row.name, answers, buildUnsubscribeUrl(insertedRow.id, trimmedEmail)));
+    emailTasks.push(sendReportEmail(trimmedEmail, row.name, answers, marketingUnsubscribeUrl));
   }
 
   if (marketingConsentBool && trimmedEmail && insertedRow.id) {
-    const token = signConfirmationToken({ id: insertedRow.id, email: trimmedEmail, iat: Date.now() });
-    emailTasks.push(sendConfirmationEmail(trimmedEmail, row.name, token, buildUnsubscribeUrl(insertedRow.id, trimmedEmail)));
+    const token = signConfirmationToken({ id: insertedRow.id, email: trimmedEmail, iat: Date.now(), purpose: 'confirm' });
+    emailTasks.push(sendConfirmationEmail(trimmedEmail, row.name, token, marketingUnsubscribeUrl));
   }
 
   if (NOTIFY_EMAIL_TO) {
@@ -166,8 +221,33 @@ function signConfirmationToken(payload) {
 }
 
 function buildUnsubscribeUrl(id, email) {
-  const token = signConfirmationToken({ id, email, iat: Date.now() });
+  const token = signConfirmationToken({ id, email, iat: Date.now(), purpose: 'unsubscribe' });
   return `${SITE_URL}/.netlify/functions/unsubscribe?t=${encodeURIComponent(token)}`;
+}
+
+// Counts how many rows already carry this email inside the rolling window. Over
+// RATE_LIMIT_MAX => rate-limited. Best-effort and fail-OPEN: if the count query
+// itself errors we allow the submission rather than block a legitimate user on
+// a transient Supabase blip. `limit` caps the response so we never pull more
+// rows than we need to make the >= decision.
+async function isEmailRateLimited(email) {
+  try {
+    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/questionnaire_responses?email=eq.${encodeURIComponent(email)}&created_at=gte.${encodeURIComponent(since)}&select=id&limit=${RATE_LIMIT_MAX}`,
+      {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      }
+    );
+    if (!res.ok) return false;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length >= RATE_LIMIT_MAX;
+  } catch {
+    return false;
+  }
 }
 
 function escapeHtml(value) {

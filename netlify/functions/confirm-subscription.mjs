@@ -38,7 +38,7 @@ export async function handler(event) {
 
     try {
       const getRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/questionnaire_responses?id=eq.${encodeURIComponent(payload.id)}&select=email`,
+        `${SUPABASE_URL}/rest/v1/questionnaire_responses?id=eq.${encodeURIComponent(payload.id)}&select=email,marketing_consent`,
         {
           headers: {
             apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -50,6 +50,13 @@ export async function handler(event) {
       const row = Array.isArray(rows) ? rows[0] : null;
 
       if (!row || row.email !== payload.email) {
+        return htmlResponse(400, expiredPage());
+      }
+      // The row must actually have opted into marketing. Recording a
+      // confirmation (and adding to the Resend audience) for a row whose
+      // marketing_consent is false would manufacture consent that was never
+      // given - the exact thing double opt-in exists to prevent.
+      if (row.marketing_consent !== true) {
         return htmlResponse(400, expiredPage());
       }
 
@@ -113,10 +120,15 @@ async function addToResendAudience(email) {
 }
 
 function verifyToken(token) {
-  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  if (!token || typeof token !== 'string') return null;
+  // Exactly base64url(payload) + '.' + 64-hex HMAC, nothing more. `split('.')`
+  // alone kept only the first two segments and silently dropped any appended
+  // junk, so a valid-signature-plus-`"><script>` token passed verification and
+  // was then reflected raw into the page. Rejecting any extra segment here (and
+  // escaping at the render site) closes that reflected-XSS vector.
+  if (!/^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/.test(token)) return null;
 
   const [encoded, signature] = token.split('.');
-  if (!encoded || !signature) return null;
 
   const expected = crypto.createHmac('sha256', CONSENT_TOKEN_SECRET).update(encoded).digest('hex');
   const expectedBuf = Buffer.from(expected, 'hex');
@@ -133,6 +145,14 @@ function verifyToken(token) {
   }
 
   if (!payload || typeof payload.id !== 'string' || typeof payload.email !== 'string' || typeof payload.iat !== 'number') {
+    return null;
+  }
+  // Purpose-bound: only a token minted for the confirm flow is valid here. An
+  // unsubscribe token (same {id,email} shape) must be rejected, so a report-only
+  // user's unsubscribe link can't be replayed against this endpoint to fake a
+  // marketing-consent confirmation. Tokens minted before purpose existed are
+  // rejected too - acceptable, the feature launched the same day.
+  if (payload.purpose !== 'confirm') {
     return null;
   }
   if (Date.now() - payload.iat > SEVEN_DAYS_MS) {
@@ -158,9 +178,27 @@ function extractPostedToken(event) {
 function htmlResponse(statusCode, body) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      // This page has no scripts and no images - `default-src 'none'` blocks
+      // both, so even if a token ever were reflected unescaped, no injected
+      // <script> could execute. Only the Google-Fonts stylesheet/fonts and the
+      // page's own inline <style> and self-posting form are allowed through.
+      'Content-Security-Policy':
+        "default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff',
+      // The token lives in this page's URL - never leak it in a Referer header.
+      'Referrer-Policy': 'no-referrer',
+    },
     body,
   };
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
 }
 
 function shell(title, bodyHtml) {
@@ -203,13 +241,15 @@ function shell(title, bodyHtml) {
 }
 
 function confirmPage(token) {
-  // token is HMAC-base64url output only (safe alphabet) - not raw user input.
+  // verifyToken has already constrained token to base64url + '.' + 64-hex, so
+  // it can't contain HTML-breaking characters - escapeHtml here is belt-and-
+  // braces so this stays safe even if that upstream guarantee is ever loosened.
   return shell(
     'Confirm your subscription',
     `<h1>Confirm your subscription</h1>
      <p>Click below to confirm you'd like to receive future reports and insights from Valora Partners.</p>
      <form method="POST">
-       <input type="hidden" name="t" value="${token}" />
+       <input type="hidden" name="t" value="${escapeHtml(token)}" />
        <button type="submit">Confirm subscription</button>
      </form>`
   );

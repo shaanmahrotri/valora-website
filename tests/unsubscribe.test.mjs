@@ -21,6 +21,7 @@ function freshToken(overrides = {}) {
     id: ROW_ID,
     email: EMAIL,
     iat: Date.now(),
+    purpose: 'unsubscribe',
     ...overrides,
   });
 }
@@ -337,6 +338,33 @@ describe('unsubscribe.mjs - Resend failure isolation', () => {
 
     assert.equal(res.statusCode, 200);
     assert.match(res.body, /You're unsubscribed/);
+  });
+});
+
+describe('unsubscribe.mjs - token hardening (purpose binding + reflected-XSS guard)', () => {
+  test('a confirm-purpose token is rejected here, not accepted cross-endpoint', async (t) => {
+    const { handler } = await loadUnsubscribe();
+    const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([]));
+    const confirmToken = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, {
+      id: ROW_ID, email: EMAIL, iat: Date.now(), purpose: 'confirm',
+    });
+
+    const res = await handler(getEvent(confirmToken));
+
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /Link not valid/);
+    assert.equal(fetchMock.mock.calls.length, 0);
+  });
+
+  test('a valid token with an appended segment (reflected-XSS attempt) fails and is never reflected', async (t) => {
+    const { handler } = await loadUnsubscribe();
+    t.mock.method(globalThis, 'fetch', routedFetch([]));
+    const crafted = `${freshToken()}."><script>alert(1)</script>`;
+
+    const res = await handler(getEvent(crafted));
+
+    assert.equal(res.statusCode, 400, 'the appended-segment token must fail verification');
+    assert.doesNotMatch(res.body, /<script>alert\(1\)<\/script>/, 'the payload must never be echoed into the page');
   });
 });
 

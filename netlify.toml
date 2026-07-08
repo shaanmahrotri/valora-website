@@ -5,3 +5,23 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Site-wide security headers. Deliberately the universally-safe set only - no
+# site-wide Content-Security-Policy here. A CSP would need to cover the Decap
+# admin at /admin (which needs inline styles, workers/blobs and backend
+# connections a strict policy breaks), and Netlify applies ALL matching
+# [[headers]] rules, so a second more-permissive /admin rule would be
+# *intersected* with this one (more restrictive), not override it - there's no
+# clean per-path exemption. The tight CSP that actually matters lives on the
+# confirm/unsubscribe function pages (set in those functions directly), where
+# the reflected-XSS risk was and where the content is fully controlled. A
+# site-wide static CSP is a good follow-up but must be verified against a real
+# deploy (netlify.toml headers don't apply under local `astro dev`).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

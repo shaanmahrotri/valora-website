@@ -21,6 +21,7 @@ function freshToken(overrides = {}) {
     id: ROW_ID,
     email: EMAIL,
     iat: Date.now(),
+    purpose: 'confirm',
     ...overrides,
   });
 }
@@ -82,7 +83,7 @@ describe('confirm-subscription.mjs - GET', () => {
 describe('confirm-subscription.mjs - POST happy path + Resend audience sync', () => {
   test('RESEND_CONTACTS_API_KEY/RESEND_AUDIENCE_ID both unset: confirms successfully, Resend never contacted', async (t) => {
     const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
-    const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([rowLookupRule({ email: EMAIL }), patchRule]));
+    const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([rowLookupRule({ email: EMAIL, marketing_consent: true }), patchRule]));
 
     const res = await handler(postEvent(freshToken()));
 
@@ -99,7 +100,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
       globalThis,
       'fetch',
       routedFetch([
-        rowLookupRule({ email: EMAIL }),
+        rowLookupRule({ email: EMAIL, marketing_consent: true }),
         patchRule,
         {
           match: (url, method) => url === 'https://api.resend.com/contacts' && method === 'POST',
@@ -128,7 +129,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
       globalThis,
       'fetch',
       routedFetch([
-        rowLookupRule({ email: EMAIL }),
+        rowLookupRule({ email: EMAIL, marketing_consent: true }),
         patchRule,
         {
           match: (url) => url.includes('api.resend.com'),
@@ -151,7 +152,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
       globalThis,
       'fetch',
       routedFetch([
-        rowLookupRule({ email: EMAIL }),
+        rowLookupRule({ email: EMAIL, marketing_consent: true }),
         patchRule,
         {
           match: (url) => url.includes('api.resend.com'),
@@ -223,6 +224,58 @@ describe('confirm-subscription.mjs - guards still short-circuit before the new R
     assert.equal(res.statusCode, 502);
     assert.match(res.body, /Something went wrong/);
     assert.equal(fetchMock.mock.calls.length, 1, 'the function must return before ever reaching the Resend call');
+  });
+});
+
+describe('confirm-subscription.mjs - token hardening (purpose binding + reflected-XSS guard)', () => {
+  test('an unsubscribe-purpose token is rejected here, not accepted cross-endpoint', async (t) => {
+    const { handler } = await loadConfirm();
+    const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([]));
+    const unsubToken = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, {
+      id: ROW_ID, email: EMAIL, iat: Date.now(), purpose: 'unsubscribe',
+    });
+
+    const res = await handler(getEvent(unsubToken));
+
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /Link expired/);
+    assert.equal(fetchMock.mock.calls.length, 0);
+  });
+
+  test('a legacy token with no purpose field is rejected', async (t) => {
+    const { handler } = await loadConfirm();
+    t.mock.method(globalThis, 'fetch', routedFetch([]));
+    const legacy = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, { id: ROW_ID, email: EMAIL, iat: Date.now() });
+
+    const res = await handler(getEvent(legacy));
+
+    assert.equal(res.statusCode, 400);
+  });
+
+  test('a valid token with an appended segment (reflected-XSS attempt) fails and is never reflected', async (t) => {
+    const { handler } = await loadConfirm();
+    t.mock.method(globalThis, 'fetch', routedFetch([]));
+    const crafted = `${freshToken()}."><script>alert(1)</script>`;
+
+    const res = await handler(getEvent(crafted));
+
+    assert.equal(res.statusCode, 400, 'the appended-segment token must fail verification');
+    assert.doesNotMatch(res.body, /<script>alert\(1\)<\/script>/, 'the payload must never be echoed into the page');
+  });
+
+  test('POST whose row has marketing_consent=false is rejected - no fabricated confirmation', async (t) => {
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const fetchMock = t.mock.method(
+      globalThis,
+      'fetch',
+      routedFetch([rowLookupRule({ email: EMAIL, marketing_consent: false })])
+    );
+
+    const res = await handler(postEvent(freshToken()));
+
+    assert.equal(res.statusCode, 400);
+    assert.match(res.body, /Link expired/);
+    assert.equal(fetchMock.mock.calls.length, 1, 'must stop at the row lookup - no PATCH, no Resend call');
   });
 });
 
