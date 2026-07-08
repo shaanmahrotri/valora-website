@@ -5,6 +5,13 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # DEPLOY_BASE_URL's value is the public site URL (e.g. https://valorapartners.co.uk),
+  # which legitimately appears in built HTML, docs, .env.example and test fixtures.
+  # Netlify's secret scanner otherwise fails the build on those matches. It is not a
+  # secret, so exclude just this one key from scanning - the real secrets
+  # (SUPABASE_SERVICE_ROLE_KEY, the Resend keys, CONSENT_TOKEN_SECRET) are never
+  # committed and stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "DEPLOY_BASE_URL"
 
 # Site-wide security headers. Deliberately the universally-safe set only - no
 # site-wide Content-Security-Policy here. A CSP would need to cover the Decap
