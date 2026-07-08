@@ -140,6 +140,12 @@ function htmlResponse(statusCode, body) {
 }
 
 function shell(title, bodyHtml) {
+  // Matches the real site's tokens (docs/Valora-Design-System.md: Ink
+  // #3A3827, Sand #E6DDD0, Paper #EFE9DE, Divider #CEC6B6, Gold #FEAD00,
+  // Albert Sans, Light-300 headings, the slash+wordmark+gold-rule mark) -
+  // kept identical to confirm-subscription.mjs's shell() (no shared module
+  // between functions is the established convention here, so both copies
+  // are maintained by hand in parallel).
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -147,16 +153,28 @@ function shell(title, bodyHtml) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex,nofollow" />
 <title>${title} — Valora Partners</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&display=swap" />
 <style>
-  body { font-family: Arial, sans-serif; background: #E6DDD0; color: #3A3827; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; box-sizing: border-box; }
-  .card { background: #EFE9DE; border: 1px solid #CEC6B6; padding: 48px 40px; max-width: 420px; text-align: center; }
-  h1 { font-size: 22px; font-weight: 500; margin: 0 0 16px; }
-  p { font-size: 15px; line-height: 1.7; color: #5C5A48; margin: 0 0 24px; }
-  button { background: #FEAD00; color: #2E2C20; border: none; padding: 14px 28px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+  body { font-family: 'Albert Sans', Arial, sans-serif; background: #E6DDD0; color: #3A3827; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; box-sizing: border-box; }
+  .page { max-width: 420px; width: 100%; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+  .brand__slash { font-size: 22px; font-weight: 700; color: #3A3827; opacity: 0.55; line-height: 1; }
+  .brand__word { font-size: 14px; font-weight: 400; letter-spacing: 0.36em; text-transform: uppercase; color: #3A3827; }
+  .gold-rule { width: 40px; height: 3px; background: #FEAD00; margin: 0 auto 32px; }
+  .card { background: #EFE9DE; border: 1px solid #CEC6B6; padding: 48px 40px; text-align: center; }
+  h1 { font-size: 24px; font-weight: 300; letter-spacing: -0.2px; margin: 0 0 16px; }
+  p { font-size: 15px; font-weight: 300; line-height: 1.7; color: #5C5A48; margin: 0 0 24px; }
+  button { font-family: inherit; background: #FEAD00; color: #2E2C20; border: none; padding: 14px 28px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
 </style>
 </head>
 <body>
-  <div class="card">${bodyHtml}</div>
+  <div class="page">
+    <div class="brand"><span class="brand__slash">/</span><span class="brand__word">Valora</span></div>
+    <div class="gold-rule"></div>
+    <div class="card">${bodyHtml}</div>
+  </div>
 </body>
 </html>`;
 }
