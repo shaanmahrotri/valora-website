@@ -1,0 +1,12 @@
+services:
+  nocodb:
+    image: nocodb/nocodb:2026.06.2   # pin, don't use :latest
+    ports:
+      - "8080:8080"
+    environment:
+      # NC_DB connection-string format - verify against NocoDB's current
+      # self-hosting docs if you ever change the pinned image version above.
+      NC_DB: "pg://${SUPABASE_DB_HOST}:${SUPABASE_DB_PORT}?u=${SUPABASE_DB_USER}&p=${SUPABASE_DB_PASSWORD}&d=${SUPABASE_DB_NAME}"
+      NC_AUTH_JWT_SECRET: "${NC_AUTH_JWT_SECRET}"
+      NC_DISABLE_TELE: "true"
+    restart: unless-stopped

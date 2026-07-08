@@ -3,17 +3,16 @@ import crypto from 'node:crypto';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const CONSENT_TOKEN_SECRET = process.env.CONSENT_TOKEN_SECRET;
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID;
 
-// GDPR/PECR double opt-in confirmation for the marketing-consent checkbox
-// only (never for the "email me my results" fulfilment, which needs no
-// confirmation). Split into GET (renders a button, changes nothing) and
-// POST (the only path that writes to the database) because corporate mail
-// scanners (Microsoft Safe Links, Proofpoint, Mimecast) prefetch every
-// link in an inbound email before a human opens it - an auto-confirming
-// GET would record consent that was never actually given by the person.
+// Self-serve opt-out for the marketing-consent checkbox - reached via the
+// unsubscribe link in every marketing email footer (see
+// submit-questionnaire.mjs's emailShell). Split into GET (renders a button,
+// changes nothing) and POST (the only path that writes to the database) for
+// the same Safe-Links / link-prefetch reason as confirm-subscription.mjs -
+// corporate mail scanners (Microsoft Safe Links, Proofpoint, Mimecast)
+// prefetch every link in an inbound email before a human opens it - an
+// auto-unsubscribing GET would act on a click that never actually happened.
 export async function handler(event) {
   if (event.httpMethod === 'GET') {
     const token = event.queryStringParameters?.t;
@@ -21,7 +20,7 @@ export async function handler(event) {
     if (!payload) {
       return htmlResponse(400, expiredPage());
     }
-    return htmlResponse(200, confirmPage(token));
+    return htmlResponse(200, unsubscribePage(token));
   }
 
   if (event.httpMethod === 'POST') {
@@ -58,41 +57,37 @@ export async function handler(event) {
             'Content-Type': 'application/json',
             Prefer: 'return=minimal',
           },
-          body: JSON.stringify({ marketing_consent_confirmed_at: new Date().toISOString() }),
+          body: JSON.stringify({ marketing_consent: false, unsubscribed_at: new Date().toISOString() }),
         }
       );
     } catch {
       return htmlResponse(502, errorPage());
     }
 
-    // Best-effort: mirror the confirmed contact into the Resend Audience. A
-    // failure here must not change what the person sees — they confirmed
-    // successfully regardless.
+    // Best-effort, outside the try/catch above: a Resend failure must never
+    // turn a successful unsubscribe into an error page - the person still
+    // sees "you're unsubscribed" regardless of Resend's state.
     try {
-      await addToResendAudience(payload.email);
+      await unsubscribeFromResend(payload.email);
     } catch (err) {
-      console.error('Resend audience sync failed', err);
+      console.error('Resend unsubscribe sync failed', err);
     }
 
-    return htmlResponse(200, confirmedPage());
+    return htmlResponse(200, unsubscribedPage());
   }
 
   return { statusCode: 405, body: 'Method not allowed' };
 }
 
-async function addToResendAudience(email) {
-  if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) return;
-  await fetch('https://api.resend.com/contacts', {
-    method: 'POST',
+async function unsubscribeFromResend(email) {
+  if (!RESEND_API_KEY) return;
+  await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, {
+    method: 'PATCH',
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      email,
-      unsubscribed: false,
-      segments: [{ id: RESEND_AUDIENCE_ID }],
-    }),
+    body: JSON.stringify({ unsubscribed: true }),
   });
 }
 
@@ -117,9 +112,6 @@ function verifyToken(token) {
   }
 
   if (!payload || typeof payload.id !== 'string' || typeof payload.email !== 'string' || typeof payload.iat !== 'number') {
-    return null;
-  }
-  if (Date.now() - payload.iat > SEVEN_DAYS_MS) {
     return null;
   }
 
@@ -169,27 +161,30 @@ function shell(title, bodyHtml) {
 </html>`;
 }
 
-function confirmPage(token) {
+function unsubscribePage(token) {
   // token is HMAC-base64url output only (safe alphabet) - not raw user input.
   return shell(
-    'Confirm your subscription',
-    `<h1>Confirm your subscription</h1>
-     <p>Click below to confirm you'd like Valora Partners to contact you about their services.</p>
+    'Unsubscribe',
+    `<h1>Unsubscribe</h1>
+     <p>Click below to stop receiving marketing emails from Valora Partners.</p>
      <form method="POST">
        <input type="hidden" name="t" value="${token}" />
-       <button type="submit">Confirm subscription</button>
+       <button type="submit">Unsubscribe</button>
      </form>`
   );
 }
 
-function confirmedPage() {
-  return shell('Subscribed', `<h1>You're confirmed</h1><p>Thank you - we'll be in touch.</p>`);
+function unsubscribedPage() {
+  return shell(
+    "You're unsubscribed",
+    `<h1>You're unsubscribed</h1><p>You won't receive any further marketing emails from us. You can opt back in at any time by completing a new questionnaire.</p>`
+  );
 }
 
 function expiredPage() {
   return shell(
-    'Link expired',
-    `<h1>Link expired</h1><p>This confirmation link is invalid or has expired. Please resubmit the questionnaire to request a new one.</p>`
+    'Link not valid',
+    `<h1>Link not valid</h1><p>This unsubscribe link is not valid, or the request could not be completed. To stop receiving marketing emails from Valora Partners, use the unsubscribe link in any recent email from us, or contact us at <a href="mailto:privacy@valorapartners.co.uk">privacy@valorapartners.co.uk</a>.</p>`
   );
 }
 

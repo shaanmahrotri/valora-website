@@ -28,3 +28,12 @@ alter table questionnaire_responses enable row level security;
 -- and which bypasses RLS by design) can touch this table. Verify this
 -- with the anon key before sharing the questionnaire link - see
 -- docs/questionnaire-data-requests.md.
+
+-- Added after initial launch. `add column if not exists` is safe to re-run and
+-- safe against a populated table (the not-null default backfills existing rows),
+-- so these double as the manual ALTERs to paste into the Supabase SQL editor for
+-- the already-live project (see docs/questionnaire-data-requests.md - the schema
+-- file is otherwise only ever run once).
+alter table questionnaire_responses add column if not exists unsubscribed_at timestamptz; -- self-serve opt-out (unsubscribe.mjs)
+alter table questionnaire_responses add column if not exists status text not null default 'new'; -- CRM Tier 1
+alter table questionnaire_responses add column if not exists notes text;                          -- CRM Tier 1

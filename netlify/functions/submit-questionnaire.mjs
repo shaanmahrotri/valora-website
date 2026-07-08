@@ -118,12 +118,12 @@ export async function handler(event) {
   const emailTasks = [];
 
   if (wantsReportBool && trimmedEmail) {
-    emailTasks.push(sendReportEmail(trimmedEmail, row.name, answers));
+    emailTasks.push(sendReportEmail(trimmedEmail, row.name, answers, buildUnsubscribeUrl(insertedRow.id, trimmedEmail)));
   }
 
   if (marketingConsentBool && trimmedEmail && insertedRow.id) {
     const token = signConfirmationToken({ id: insertedRow.id, email: trimmedEmail, iat: Date.now() });
-    emailTasks.push(sendConfirmationEmail(trimmedEmail, row.name, token));
+    emailTasks.push(sendConfirmationEmail(trimmedEmail, row.name, token, buildUnsubscribeUrl(insertedRow.id, trimmedEmail)));
   }
 
   if (NOTIFY_EMAIL_TO) {
@@ -151,6 +151,11 @@ function signConfirmationToken(payload) {
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto.createHmac('sha256', CONSENT_TOKEN_SECRET).update(encoded).digest('hex');
   return `${encoded}.${signature}`;
+}
+
+function buildUnsubscribeUrl(id, email) {
+  const token = signConfirmationToken({ id, email, iat: Date.now() });
+  return `${SITE_URL}/.netlify/functions/unsubscribe?t=${encodeURIComponent(token)}`;
 }
 
 function escapeHtml(value) {
@@ -197,7 +202,10 @@ function formatAnswerValue(answer) {
 // no external font - most mail clients (Outlook chief among them) strip
 // both, so Arial/Helvetica is the real rendered result almost everywhere
 // regardless of what's declared first.
-function emailShell(bodyHtml) {
+function emailShell(bodyHtml, unsubscribeUrl) {
+  const unsubscribeLine = unsubscribeUrl
+    ? `<br><a href="${unsubscribeUrl}" style="color:#8F8B79;text-decoration:underline;">Unsubscribe from marketing emails</a>`
+    : '';
   return `<!doctype html>
 <html lang="en">
 <body style="margin:0;padding:0;background-color:#E6DDD0;">
@@ -219,7 +227,7 @@ function emailShell(bodyHtml) {
           </tr>
           <tr>
             <td style="padding:20px 40px;border-top:1px solid #CEC6B6;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#8F8B79;">
-              LOTUC Consulting Ltd T/A Valora Partners &middot; 71-75 Shelton Street, London, WC2H 9JQ
+              LOTUC Consulting Ltd T/A Valora Partners &middot; 71-75 Shelton Street, London, WC2H 9JQ${unsubscribeLine}
             </td>
           </tr>
         </table>
@@ -230,7 +238,7 @@ function emailShell(bodyHtml) {
 </html>`;
 }
 
-async function sendReportEmail(to, name, answers) {
+async function sendReportEmail(to, name, answers, unsubscribeUrl) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hi,';
   const rows = answers
     .map((a, i) => `
@@ -245,10 +253,10 @@ async function sendReportEmail(to, name, answers) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
     <p style="font-size:14px;line-height:1.7;color:#5C5A48;margin:28px 0 0 0;">We'll be in touch if there's anything more to discuss.</p>
   `;
-  await sendResendEmail({ to, subject: 'Your Valora Partners questionnaire results', html: emailShell(body) });
+  await sendResendEmail({ to, subject: 'Your Valora Partners questionnaire results', html: emailShell(body, unsubscribeUrl) });
 }
 
-async function sendConfirmationEmail(to, name, token) {
+async function sendConfirmationEmail(to, name, token, unsubscribeUrl) {
   const confirmUrl = `${SITE_URL}/.netlify/functions/confirm-subscription?t=${encodeURIComponent(token)}`;
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hi,';
   const body = `
@@ -263,7 +271,7 @@ async function sendConfirmationEmail(to, name, token) {
     </table>
     <p style="font-size:13px;line-height:1.7;color:#8F8B79;margin:28px 0 0 0;">If you didn't request this, you can ignore this email - you won't be added to anything.</p>
   `;
-  await sendResendEmail({ to, subject: 'Please confirm - Valora Partners', html: emailShell(body) });
+  await sendResendEmail({ to, subject: 'Please confirm - Valora Partners', html: emailShell(body, unsubscribeUrl) });
 }
 
 async function sendInternalNotification(slug, email, name) {
