@@ -73,13 +73,17 @@ const page = await getEntry('legal', 'privacy');
     line-height: 1.9;
   }
   .legal__section p + p { margin-top: 14px; }
-  .legal__link {
+  /* :global() because these links arrive via set:html (raw HTML from
+     content, not Astro-authored markup) - Astro never sees them at build
+     time, so the scoped-style attribute never gets stamped on and a plain
+     ".legal__link" rule silently never matches. */
+  :global(.legal__link) {
     color: var(--ink);
     border-bottom: 1px solid var(--divider);
     padding-bottom: 1px;
     transition: border-color 0.15s;
   }
-  .legal__link:hover { border-color: var(--gold); }
+  :global(.legal__link:hover) { border-color: var(--gold); }
 
   .legal__footer {
     display: flex;
