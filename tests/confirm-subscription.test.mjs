@@ -80,8 +80,8 @@ describe('confirm-subscription.mjs - GET', () => {
 });
 
 describe('confirm-subscription.mjs - POST happy path + Resend audience sync', () => {
-  test('RESEND_API_KEY/RESEND_AUDIENCE_ID both unset: confirms successfully, Resend never contacted', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
+  test('RESEND_CONTACTS_API_KEY/RESEND_AUDIENCE_ID both unset: confirms successfully, Resend never contacted', async (t) => {
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
     const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([rowLookupRule({ email: EMAIL }), patchRule]));
 
     const res = await handler(postEvent(freshToken()));
@@ -93,8 +93,8 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
     assert.ok(patchBody.marketing_consent_confirmed_at, 'should stamp the confirmation timestamp');
   });
 
-  test('RESEND_API_KEY/RESEND_AUDIENCE_ID both set: also POSTs the contact into the Resend Audience', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+  test('RESEND_CONTACTS_API_KEY/RESEND_AUDIENCE_ID both set: also POSTs the contact into the Resend Audience', async (t) => {
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',
@@ -123,7 +123,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
   });
 
   test('Resend POST throws (network failure) -> user still sees confirmedPage, not errorPage', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     t.mock.method(
       globalThis,
       'fetch',
@@ -146,7 +146,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
   });
 
   test('Resend POST returns non-2xx (e.g. duplicate contact) -> user still sees confirmedPage', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     t.mock.method(
       globalThis,
       'fetch',
@@ -169,7 +169,7 @@ describe('confirm-subscription.mjs - POST happy path + Resend audience sync', ()
 
 describe('confirm-subscription.mjs - guards still short-circuit before the new Resend call', () => {
   test('row missing -> expiredPage (400); Resend never attempted', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     const fetchMock = t.mock.method(globalThis, 'fetch', routedFetch([rowLookupRule(null)]));
 
     const res = await handler(postEvent(freshToken()));
@@ -180,7 +180,7 @@ describe('confirm-subscription.mjs - guards still short-circuit before the new R
   });
 
   test('row.email mismatch -> expiredPage (400); Resend never attempted', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',
@@ -204,7 +204,7 @@ describe('confirm-subscription.mjs - guards still short-circuit before the new R
   });
 
   test('Supabase throws during the row lookup -> errorPage (502); Resend never attempted', async (t) => {
-    const { handler } = await loadConfirm({ RESEND_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
+    const { handler } = await loadConfirm({ RESEND_CONTACTS_API_KEY: 'resend-key', RESEND_AUDIENCE_ID: 'audience-123' });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',

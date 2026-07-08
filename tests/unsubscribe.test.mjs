@@ -103,8 +103,8 @@ describe('unsubscribe.mjs - GET (render only, never writes)', () => {
 });
 
 describe('unsubscribe.mjs - POST (happy path + idempotency)', () => {
-  test('happy path with RESEND_API_KEY unset: unsubscribes, correct PATCH body, Resend never called', async (t) => {
-    const { handler } = await loadUnsubscribe({ RESEND_API_KEY: undefined });
+  test('happy path with RESEND_CONTACTS_API_KEY unset: unsubscribes, correct PATCH body, Resend never called', async (t) => {
+    const { handler } = await loadUnsubscribe({ RESEND_CONTACTS_API_KEY: undefined });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',
@@ -137,12 +137,12 @@ describe('unsubscribe.mjs - POST (happy path + idempotency)', () => {
     assert.ok(!('marketing_consent_confirmed_at' in patchBody), 'must not touch the historical opt-in audit field');
     assert.ok(
       !fetchMock.mock.calls.some((c) => callUrlIncludesResend(c)),
-      'Resend must not be contacted when RESEND_API_KEY is unset'
+      'Resend must not be contacted when RESEND_CONTACTS_API_KEY is unset'
     );
   });
 
-  test('happy path with RESEND_API_KEY set: also best-effort PATCHes the Resend contact to unsubscribed:true', async (t) => {
-    const { handler } = await loadUnsubscribe({ RESEND_API_KEY: 'resend-key' });
+  test('happy path with RESEND_CONTACTS_API_KEY set: also best-effort PATCHes the Resend contact to unsubscribed:true', async (t) => {
+    const { handler } = await loadUnsubscribe({ RESEND_CONTACTS_API_KEY: 'resend-key' });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',
@@ -175,7 +175,7 @@ describe('unsubscribe.mjs - POST (happy path + idempotency)', () => {
   });
 
   test('idempotency: POSTing the same token twice succeeds both times with no "already unsubscribed" branching', async (t) => {
-    const { handler } = await loadUnsubscribe({ RESEND_API_KEY: undefined });
+    const { handler } = await loadUnsubscribe({ RESEND_CONTACTS_API_KEY: undefined });
     const fetchMock = t.mock.method(
       globalThis,
       'fetch',
@@ -284,7 +284,7 @@ describe('unsubscribe.mjs - POST guards (row-mismatch, tampering, malformed inpu
 
 describe('unsubscribe.mjs - Resend failure isolation', () => {
   test('Resend PATCH throws (network failure) -> user still sees the success page, not errorPage', async (t) => {
-    const { handler } = await loadUnsubscribe({ RESEND_API_KEY: 'resend-key' });
+    const { handler } = await loadUnsubscribe({ RESEND_CONTACTS_API_KEY: 'resend-key' });
     t.mock.method(
       globalThis,
       'fetch',
@@ -313,7 +313,7 @@ describe('unsubscribe.mjs - Resend failure isolation', () => {
   });
 
   test('Resend PATCH returns non-2xx (e.g. contact does not exist) -> user still sees the success page', async (t) => {
-    const { handler } = await loadUnsubscribe({ RESEND_API_KEY: 'resend-key' });
+    const { handler } = await loadUnsubscribe({ RESEND_CONTACTS_API_KEY: 'resend-key' });
     t.mock.method(
       globalThis,
       'fetch',

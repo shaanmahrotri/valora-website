@@ -13,25 +13,38 @@ an access/erasure request once the questionnaire is live.
 2. Run `scripts/supabase-schema.sql` once in the Supabase SQL editor.
 3. In Netlify (Project configuration → Environment variables), set the
    variables listed in `.env.example`: `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`,
-   `CONSENT_TOKEN_SECRET` (generate with `openssl rand -hex 32`),
-   `NOTIFY_EMAIL_FROM`, `NOTIFY_EMAIL_TO`, `PRIVACY_POLICY_VERSION`,
-   `DEPLOY_BASE_URL`. Set `DEPLOY_BASE_URL` with a **different value per
-   deploy context** (Netlify: this variable → "Different value for each
-   deploy context") — `https://valorapartners.co.uk` for Production,
-   the `astro-rebuild` branch's own URL for Branch deploys. Functions have
-   no built-in way to detect their own deploy context (confirmed against
-   Netlify's docs — only `URL`, `SITE_NAME`, `SITE_ID` are available to
-   functions at runtime; `DEPLOY_PRIME_URL` and similar are build-time
-   only), so without this, every confirm/unsubscribe link generated from
-   any environment — including a branch deploy — points at production.
+   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_CONTACTS_API_KEY`,
+   `RESEND_AUDIENCE_ID`, `CONSENT_TOKEN_SECRET` (generate with
+   `openssl rand -hex 32`), `NOTIFY_EMAIL_FROM`, `NOTIFY_EMAIL_TO`,
+   `PRIVACY_POLICY_VERSION`, `DEPLOY_BASE_URL`.
+   - `RESEND_API_KEY` and `RESEND_CONTACTS_API_KEY` must be **two separate
+     keys** from the Resend dashboard, not the same value twice.
+     `RESEND_API_KEY` only ever sends emails — give it **Sending access**
+     (Resend's own recommended default). `RESEND_CONTACTS_API_KEY` needs
+     **Full access** (or at minimum Contacts permissions) since it manages
+     the Audience/Segment — confirmed live that a Sending-access key gets
+     a 401 `restricted_api_key` error from the Contacts API. Keeping them
+     separate means a leaked sending key still can't touch the contact
+     list.
+   - Set `DEPLOY_BASE_URL` with a **different value per deploy context**
+     (Netlify: this variable → "Different value for each deploy context")
+     — `https://valorapartners.co.uk` for Production, the `astro-rebuild`
+     branch's own URL for Branch deploys. Functions have no built-in way
+     to detect their own deploy context (confirmed against Netlify's docs
+     — only `URL`, `SITE_NAME`, `SITE_ID` are available to functions at
+     runtime; `DEPLOY_PRIME_URL` and similar are build-time only), so
+     without this, every confirm/unsubscribe link generated from any
+     environment — including a branch deploy — points at production.
 4. Request Supabase's Data Processing Agreement (support ticket from the
    Supabase dashboard, or email support@supabase.io) — needed for the
    GDPR paper trail.
 5. In Resend, verify a sending domain (adds SPF/DKIM/DMARC DNS records to
    the Valora domain) — required before `NOTIFY_EMAIL_FROM` can send.
-   Afterwards, create a Resend **Audience** and set its ID as
+   Afterwards, create a Resend **Audience/Segment** and set its ID as
    `RESEND_AUDIENCE_ID`, so confirmed marketing contacts sync into it.
+   Create the **second** API key here too (Full access, for
+   `RESEND_CONTACTS_API_KEY`) — see step 3 above for why it must be
+   separate from the sending key.
 6. Set up a free external uptime pinger (UptimeRobot or cron-job.org)
    hitting `/.netlify/functions/keepalive` every few days, so the Supabase
    free-tier project doesn't auto-pause from inactivity between prospect

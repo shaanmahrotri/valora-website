@@ -3,7 +3,11 @@ import crypto from 'node:crypto';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const CONSENT_TOKEN_SECRET = process.env.CONSENT_TOKEN_SECRET;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Deliberately separate from submit-questionnaire.mjs's RESEND_API_KEY (a
+// Sending-access key) - confirmed live that a Sending-access key gets a 401
+// restricted_api_key from the Contacts API. Same key as
+// confirm-subscription.mjs's RESEND_CONTACTS_API_KEY.
+const RESEND_CONTACTS_API_KEY = process.env.RESEND_CONTACTS_API_KEY;
 
 // Self-serve opt-out for the marketing-consent checkbox - reached via the
 // unsubscribe link in every marketing email footer (see
@@ -80,15 +84,21 @@ export async function handler(event) {
 }
 
 async function unsubscribeFromResend(email) {
-  if (!RESEND_API_KEY) return;
-  await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, {
+  if (!RESEND_CONTACTS_API_KEY) {
+    console.error('Resend unsubscribe sync skipped - RESEND_CONTACTS_API_KEY not set for this deploy context');
+    return;
+  }
+  const res = await fetch(`https://api.resend.com/contacts/${encodeURIComponent(email)}`, {
     method: 'PATCH',
     headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+      Authorization: `Bearer ${RESEND_CONTACTS_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ unsubscribed: true }),
   });
+  if (!res.ok) {
+    console.error('Resend unsubscribe sync got a non-2xx response', res.status, await res.text());
+  }
 }
 
 function verifyToken(token) {

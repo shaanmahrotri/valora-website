@@ -4,7 +4,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const CONSENT_TOKEN_SECRET = process.env.CONSENT_TOKEN_SECRET;
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Deliberately separate from submit-questionnaire.mjs's RESEND_API_KEY
+// (a Sending-access key) - confirmed live that a Sending-access key gets a
+// 401 restricted_api_key from the Contacts API. This one needs Full access
+// (or at minimum Contacts permissions) in Resend, scoped to only this call
+// so a leaked sending key still can't touch the contact list.
+const RESEND_CONTACTS_API_KEY = process.env.RESEND_CONTACTS_API_KEY;
 const RESEND_AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID;
 
 // GDPR/PECR double opt-in confirmation for the marketing-consent checkbox
@@ -86,14 +91,14 @@ async function addToResendAudience(email) {
   // trace at all), which made a silent "nothing shows up in Resend" report
   // impossible to diagnose without guessing. Neither log line changes
   // control flow - the confirmation still succeeds either way.
-  if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
-    console.error('Resend audience sync skipped - RESEND_API_KEY or RESEND_AUDIENCE_ID not set for this deploy context');
+  if (!RESEND_CONTACTS_API_KEY || !RESEND_AUDIENCE_ID) {
+    console.error('Resend audience sync skipped - RESEND_CONTACTS_API_KEY or RESEND_AUDIENCE_ID not set for this deploy context');
     return;
   }
   const res = await fetch('https://api.resend.com/contacts', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+      Authorization: `Bearer ${RESEND_CONTACTS_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

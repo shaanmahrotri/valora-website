@@ -34,7 +34,7 @@ const patchRule = {
 
 describe('token cross-compatibility between confirm-subscription.mjs and unsubscribe.mjs', () => {
   test('a freshly minted token GETs successfully on both endpoints', async (t) => {
-    const [confirmMod, unsubMod] = await loadBoth({ RESEND_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
+    const [confirmMod, unsubMod] = await loadBoth({ RESEND_CONTACTS_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
     t.mock.method(globalThis, 'fetch', routedFetch([]));
     const token = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, { id: ROW_ID, email: EMAIL, iat: Date.now() });
 
@@ -48,7 +48,7 @@ describe('token cross-compatibility between confirm-subscription.mjs and unsubsc
   });
 
   test('the same token also writes successfully through the full POST path on both endpoints', async (t) => {
-    const [confirmMod, unsubMod] = await loadBoth({ RESEND_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
+    const [confirmMod, unsubMod] = await loadBoth({ RESEND_CONTACTS_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
     const token = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, { id: ROW_ID, email: EMAIL, iat: Date.now() });
     const postEvent = { httpMethod: 'POST', headers: {}, body: new URLSearchParams({ t: token }).toString() };
 
@@ -70,7 +70,7 @@ describe('token cross-compatibility between confirm-subscription.mjs and unsubsc
   });
 
   test('expiry asymmetry: a 30-day-old token is REJECTED by confirm-subscription but ACCEPTED by unsubscribe', async (t) => {
-    const [confirmMod, unsubMod] = await loadBoth({ RESEND_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
+    const [confirmMod, unsubMod] = await loadBoth({ RESEND_CONTACTS_API_KEY: undefined, RESEND_AUDIENCE_ID: undefined });
     t.mock.method(globalThis, 'fetch', routedFetch([]));
     const oldToken = mintToken(BASE_UNSUB_ENV.CONSENT_TOKEN_SECRET, {
       id: ROW_ID,
