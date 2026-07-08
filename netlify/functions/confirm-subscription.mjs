@@ -174,7 +174,7 @@ function confirmPage(token) {
   return shell(
     'Confirm your subscription',
     `<h1>Confirm your subscription</h1>
-     <p>Click below to confirm you'd like Valora Partners to contact you about their services.</p>
+     <p>Click below to confirm you'd like to receive future reports and insights from Valora Partners.</p>
      <form method="POST">
        <input type="hidden" name="t" value="${token}" />
        <button type="submit">Confirm subscription</button>

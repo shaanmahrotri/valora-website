@@ -15,7 +15,16 @@ an access/erasure request once the questionnaire is live.
    variables listed in `.env.example`: `SUPABASE_URL`,
    `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`,
    `CONSENT_TOKEN_SECRET` (generate with `openssl rand -hex 32`),
-   `NOTIFY_EMAIL_FROM`, `NOTIFY_EMAIL_TO`, `PRIVACY_POLICY_VERSION`.
+   `NOTIFY_EMAIL_FROM`, `NOTIFY_EMAIL_TO`, `PRIVACY_POLICY_VERSION`,
+   `DEPLOY_BASE_URL`. Set `DEPLOY_BASE_URL` with a **different value per
+   deploy context** (Netlify: this variable → "Different value for each
+   deploy context") — `https://valorapartners.co.uk` for Production,
+   the `astro-rebuild` branch's own URL for Branch deploys. Functions have
+   no built-in way to detect their own deploy context (confirmed against
+   Netlify's docs — only `URL`, `SITE_NAME`, `SITE_ID` are available to
+   functions at runtime; `DEPLOY_PRIME_URL` and similar are build-time
+   only), so without this, every confirm/unsubscribe link generated from
+   any environment — including a branch deploy — points at production.
 4. Request Supabase's Data Processing Agreement (support ticket from the
    Supabase dashboard, or email support@supabase.io) — needed for the
    GDPR paper trail.

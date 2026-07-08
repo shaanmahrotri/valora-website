@@ -201,16 +201,17 @@ describe('submit-questionnaire.mjs - other behaviour', () => {
 });
 
 describe('submit-questionnaire.mjs - SITE_URL resolves to the current deploy, not always production', () => {
-  test('DEPLOY_PRIME_URL wins over URL, so a branch deploy links back to itself', async (t) => {
-    // Reproduces a real bug found via manual staging testing: Netlify's `URL`
-    // is always the production domain regardless of which deploy is running,
-    // while `DEPLOY_PRIME_URL` is the branch-specific URL on a branch deploy
-    // (and equals `URL` on an actual production deploy). Checking `URL` first
-    // meant every confirm/unsubscribe link, from any environment, pointed at
-    // production.
+  test('DEPLOY_BASE_URL wins over URL, so a branch deploy (once configured) links back to itself', async (t) => {
+    // A prior attempt at this used DEPLOY_PRIME_URL as the branch-aware
+    // fallback - wrong: confirmed against Netlify's own docs that
+    // DEPLOY_PRIME_URL is build-time only and is simply undefined inside a
+    // running function, so that "fix" silently never changed anything and
+    // every link kept pointing at production. DEPLOY_BASE_URL is a custom
+    // env var Shaan sets in the Netlify UI, scoped per deploy context, which
+    // functions genuinely can read from process.env at runtime.
     const { handler } = await loadSubmit({
       URL: 'https://valorapartners.co.uk',
-      DEPLOY_PRIME_URL: 'https://astro-rebuild--valora.netlify.app',
+      DEPLOY_BASE_URL: 'https://astro-rebuild--valora.netlify.app',
     });
     const insertedRow = { id: 'row-xyz-999' };
     const captured = [];
@@ -226,8 +227,8 @@ describe('submit-questionnaire.mjs - SITE_URL resolves to the current deploy, no
     assert.match(confirmationEmail.html, /href="https:\/\/astro-rebuild--valora\.netlify\.app\/\.netlify\/functions\/confirm-subscription\?t=/);
   });
 
-  test('production deploy (DEPLOY_PRIME_URL absent, as Netlify only sets it on branch/PR deploys) falls back to URL', async (t) => {
-    const { handler } = await loadSubmit({ URL: 'https://valorapartners.co.uk', DEPLOY_PRIME_URL: undefined });
+  test('DEPLOY_BASE_URL absent (not yet configured for this context) falls back to URL', async (t) => {
+    const { handler } = await loadSubmit({ URL: 'https://valorapartners.co.uk', DEPLOY_BASE_URL: undefined });
     const insertedRow = { id: 'row-xyz-999' };
     const captured = [];
     t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));

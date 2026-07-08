@@ -6,13 +6,17 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const CONSENT_TOKEN_SECRET = process.env.CONSENT_TOKEN_SECRET;
 const NOTIFY_EMAIL_FROM = process.env.NOTIFY_EMAIL_FROM;
 const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
-// DEPLOY_PRIME_URL first, not URL: Netlify's `URL` is always the production
-// domain regardless of deploy context, while `DEPLOY_PRIME_URL` resolves to
-// the stable branch-deploy subdomain on a branch deploy (and equals `URL` on
-// an actual production deploy, so this is a no-op change there). Checking
-// `URL` first - the previous order - meant every confirm/unsubscribe link
-// ever generated, from any environment, pointed at production.
-const SITE_URL = process.env.DEPLOY_PRIME_URL || process.env.URL || '';
+// Previous attempt at this used DEPLOY_PRIME_URL as a branch-aware fallback -
+// wrong, and confirmed wrong live: DEPLOY_PRIME_URL is a BUILD-time-only
+// variable (Netlify docs: "only URL, SITE_NAME, SITE_ID are available to
+// serverless functions during runtime"). Inside a running function it's
+// always undefined, so that "fix" silently always fell through to URL
+// (always production) anyway. There is no built-in way for a function to
+// know its own deploy context - Netlify does not expose one. The real fix:
+// DEPLOY_BASE_URL is a custom env var Shaan sets in the Netlify UI, scoped
+// per deploy context (a different value for Production vs Branch deploys) -
+// see .env.example. Falls back to URL (production) until that's configured.
+const SITE_URL = process.env.DEPLOY_BASE_URL || process.env.URL || '';
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
@@ -267,7 +271,7 @@ async function sendConfirmationEmail(to, name, token, unsubscribeUrl) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : 'Hi,';
   const body = `
     <p style="font-size:16px;color:#3A3827;margin:0 0 20px 0;">${greeting}</p>
-    <p style="font-size:14px;line-height:1.7;color:#5C5A48;margin:0 0 28px 0;">You asked to hear from Valora Partners about our services. Please confirm this is really you:</p>
+    <p style="font-size:14px;line-height:1.7;color:#5C5A48;margin:0 0 28px 0;">You asked to receive future reports and insights from Valora Partners. Please confirm this is really you:</p>
     <table role="presentation" cellpadding="0" cellspacing="0">
       <tr>
         <td style="background-color:#FEAD00;">
