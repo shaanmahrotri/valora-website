@@ -16,7 +16,9 @@ const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
 // DEPLOY_BASE_URL is a custom env var Shaan sets in the Netlify UI, scoped
 // per deploy context (a different value for Production vs Branch deploys) -
 // see .env.example. Falls back to URL (production) until that's configured.
-const SITE_URL = process.env.DEPLOY_BASE_URL || process.env.URL || '';
+// Trailing slash(es) stripped defensively - a value saved with one in the
+// Netlify UI would otherwise produce a double slash before "/.netlify/...".
+const SITE_URL = (process.env.DEPLOY_BASE_URL || process.env.URL || '').replace(/\/+$/, '');
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {

@@ -81,8 +81,16 @@ export async function handler(event) {
 }
 
 async function addToResendAudience(email) {
-  if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) return;
-  await fetch('https://api.resend.com/contacts', {
+  // Logged, not just caught: a missing env var and a failed API call were
+  // previously indistinguishable in the function logs (both produced no
+  // trace at all), which made a silent "nothing shows up in Resend" report
+  // impossible to diagnose without guessing. Neither log line changes
+  // control flow - the confirmation still succeeds either way.
+  if (!RESEND_API_KEY || !RESEND_AUDIENCE_ID) {
+    console.error('Resend audience sync skipped - RESEND_API_KEY or RESEND_AUDIENCE_ID not set for this deploy context');
+    return;
+  }
+  const res = await fetch('https://api.resend.com/contacts', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
@@ -94,6 +102,9 @@ async function addToResendAudience(email) {
       segments: [{ id: RESEND_AUDIENCE_ID }],
     }),
   });
+  if (!res.ok) {
+    console.error('Resend audience sync got a non-2xx response', res.status, await res.text());
+  }
 }
 
 function verifyToken(token) {
