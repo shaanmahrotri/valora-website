@@ -279,5 +279,8 @@ async function sendInternalNotification(slug, email, name) {
     <p style="font-size:16px;color:#3A3827;margin:0 0 16px 0;">New questionnaire submission for <strong>${escapeHtml(slug)}</strong>.</p>
     <p style="font-size:14px;color:#5C5A48;margin:0;">${email ? `Contact: ${escapeHtml(name || '')} &lt;${escapeHtml(email)}&gt;` : 'No contact details provided.'}</p>
   `;
-  await sendResendEmail({ to: NOTIFY_EMAIL_TO, subject: 'New questionnaire submission', html: emailShell(body) });
+  // NOTIFY_EMAIL_TO may hold one address or a comma-separated list (e.g. both
+  // partners) - Resend's `to` field accepts an array for multiple recipients.
+  const to = NOTIFY_EMAIL_TO.split(',').map((address) => address.trim()).filter(Boolean);
+  await sendResendEmail({ to, subject: 'New questionnaire submission', html: emailShell(body) });
 }
