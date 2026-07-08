@@ -213,7 +213,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
                 </label>
               )}
 
-              <p class="qform__privacy">{closing.consentNote}</p>
+              <p class="qform__privacy" set:html={closing.consentNote} />
             </div>
 
             <div class="qform__hp" aria-hidden="true">
@@ -775,8 +775,11 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   .qform__check input { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
 
   .qform__privacy { font-size: 13px; color: var(--faint); line-height: 1.7; margin-top: 8px; }
-  .qform__privacy a { color: var(--ink); border-bottom: 1px solid var(--divider); padding-bottom: 1px; }
-  .qform__privacy a:hover { border-color: var(--gold); }
+  /* :global() because consentNote is injected via set:html - Astro never sees
+     this <a> at build time, so it can't stamp the scoped-style attribute onto
+     it, and an un-escaped ".qform__privacy a" rule silently never matches. */
+  .qform__privacy :global(a) { color: var(--ink); border-bottom: 1px solid var(--divider); padding-bottom: 1px; }
+  .qform__privacy :global(a:hover) { border-color: var(--gold); }
 
   .qform__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
