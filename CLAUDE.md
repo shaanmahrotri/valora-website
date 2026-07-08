@@ -12,6 +12,13 @@ below is a different, unrelated system.
   `astro.config.mjs`) — deploys to Netlify, no adapter, no SSR.
 - Content lives in `src/content/` as Astro content collections, schema in
   `src/content/config.ts`.
+- Server-side logic lives entirely in `netlify/functions/*.mjs` (plain
+  Netlify Functions, not an Astro/SSR concern) - questionnaire submission,
+  the report/confirmation emails, double opt-in, self-serve unsubscribe,
+  and a Supabase keepalive ping. No shared modules between them by
+  convention (each file is self-contained, duplicating small helpers
+  rather than importing across functions). See
+  `docs/questionnaire-data-requests.md` for env vars and setup.
 - Git branch `astro-rebuild` is the active branch. It's staged on Netlify as
   a **branch deploy**, separate from whatever production currently is. This
   is intentionally a **permanent pre-production staging site**, not a
@@ -49,6 +56,20 @@ below is a different, unrelated system.
   raw HTML, not escaped text or markdown - several already contain inline
   `<a href="...">` links and `<br>` line breaks that need to render as
   real markup.
+- `questionnaires` - one flat YAML file per survey at
+  `src/content/questionnaires/<slug>.yaml`, rendered by
+  `src/pages/questionnaire/[slug].astro`. Supports rating scales,
+  multi-select with a max-pick cap, ranked picks, Yes/No/Not-sure grids
+  with per-row follow-ups, conditional reveals, and an opt-in gate question
+  (asked first) that decides whether a closing contact-capture step even
+  appears. `closing.offerMarketingConsent` (per-questionnaire boolean)
+  turns on a second, independent consent checkbox for ongoing marketing
+  contact - separate from the report-request consent captured by the gate.
+  Submission, the report/confirmation emails, the double opt-in flow, and
+  self-serve unsubscribe are all Netlify Functions - see
+  `docs/questionnaire-data-requests.md` for the full setup, env vars, and
+  data-request handling, and `docs/crm-setup.md` for the NocoDB lead-view
+  companion.
 
 ## Local CMS (Decap)
 
@@ -131,8 +152,15 @@ immune to that whole failure class.
   Same end goal as the original plan (editing from any browser, no
   `npm run cms` locally) via a current, supported mechanism instead of a
   deprecated one. Planned to start in a fresh session.
-- **Production launch decision.** No decision yet on if/when `astro-rebuild`
-  becomes the real production site - see the permanent-staging note above.
+- ~~**Production launch decision.**~~ Decided and executed 080726: `main`
+  now reflects `astro-rebuild` as of that date (25 commits merged,
+  `e610508`) - the full questionnaire feature (submission, report email,
+  double opt-in marketing consent, self-serve opt-out) plus CRM Tier 1
+  (NocoDB) setup docs are live in production for the first time. Insights
+  launched separately earlier (`1b5eeb7`). This does **not** retire
+  `astro-rebuild` - per the permanent-staging note above, it stays the
+  ongoing place to build and review the next round of changes before they
+  get merged to `main` the same way.
 
 ## Visual design (site)
 
