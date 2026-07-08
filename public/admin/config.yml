@@ -120,6 +120,82 @@ collections:
         file: src/content/legal/disclaimer.yaml
         fields: *legal_fields
 
+  - name: questionnaires
+    label: "Questionnaires"
+    folder: src/content/questionnaires
+    extension: yaml
+    format: yaml
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}}"
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: intro, label: "Intro copy", widget: text }
+      - { name: formVersion, label: "Form version (bump when questions change meaningfully)", widget: number, value_type: int, default: 1 }
+      - { name: submitLabel, label: "Submit button label", widget: string, default: "See my results" }
+      - name: gate
+        label: "Opt-in gate (optional - asked first; answering \"no\" skips the closing contact step entirely)"
+        widget: object
+        required: false
+        fields:
+          - { name: id, label: "Question id (must stay unique)", widget: string }
+          - { name: prompt, label: Question, widget: text }
+          - { name: yesLabel, label: "\"Yes\" option label", widget: string }
+          - { name: noLabel, label: "\"No\" option label", widget: string }
+          - { name: note, label: "Small print shown under the options", widget: text, required: false }
+      - name: sections
+        label: Sections
+        widget: list
+        summary: "{{fields.heading}}"
+        fields:
+          - { name: heading, label: "Section heading", widget: string, required: false }
+          - { name: intro, label: "Section intro copy (shown above its first question)", widget: text, required: false }
+          - name: questions
+            label: Questions
+            widget: list
+            summary: "{{fields.id}} - {{fields.prompt}}"
+            fields:
+              - { name: id, label: "Question id (must stay unique across the whole questionnaire)", widget: string }
+              - name: type
+                label: "Question type"
+                widget: select
+                options: ["scale", "single", "multi", "rankTwo", "grid", "open"]
+              - { name: prompt, label: Question, widget: text }
+              - { name: scaleMin, label: "[scale] Min value", widget: number, value_type: int, required: false, default: 1 }
+              - { name: scaleMax, label: "[scale] Max value", widget: number, value_type: int, required: false, default: 5 }
+              - { name: scaleMinLabel, label: "[scale] Label for the low end", widget: string, required: false }
+              - { name: scaleMaxLabel, label: "[scale] Label for the high end", widget: string, required: false }
+              - name: options
+                label: "[single / multi / rankTwo] Answer options"
+                widget: list
+                required: false
+                field: { name: option, label: Option, widget: string }
+              - { name: maxSelections, label: "[multi] Max selections allowed (leave blank for unlimited)", widget: number, value_type: int, required: false }
+              - { name: gridColumns, label: "[grid] Column headings", widget: list, required: false, field: { name: column, label: Column, widget: string } }
+              - name: gridRows
+                label: "[grid] Rows"
+                widget: list
+                required: false
+                fields:
+                  - { name: id, label: "Row id", widget: string }
+                  - { name: label, label: "Row label", widget: string }
+              - { name: gridFollowUpColumn, label: "[grid] Column that reveals the follow-up text field", widget: string, required: false }
+              - { name: gridFollowUpPrompt, label: "[grid] Follow-up field prompt", widget: string, required: false }
+              - { name: detailPrompt, label: "[single / multi] Optional free-text detail box prompt", widget: string, required: false }
+              - { name: detailShowIfValues, label: "[single / multi] Only show the detail box for these answers (leave blank to always show once answered)", widget: list, required: false, field: { name: value, label: Value, widget: string } }
+              - { name: showIfQuestionId, label: "Only show this question if another question's answer matches (id of that question)", widget: string, required: false }
+              - { name: showIfValues, label: "...and its answer is one of these", widget: list, required: false, field: { name: value, label: Value, widget: string } }
+      - name: closing
+        label: "Closing contact step (optional - only reachable if the opt-in gate above is answered \"yes\")"
+        widget: object
+        required: false
+        fields:
+          - { name: leadText, label: "Lead copy", widget: text }
+          - { name: consentNote, label: "Consent / privacy small print", widget: text }
+          - { name: fields, label: "Fields to collect", widget: select, multiple: true, options: ["name", "organisation", "email"], default: ["name", "organisation", "email"] }
+          - { name: offerMarketingConsent, label: "Also offer a separate \"contact me about your services\" marketing consent checkbox", widget: boolean, default: false }
+          - { name: marketingLabel, label: "Marketing checkbox label (if offered above)", widget: string, required: false }
+
   - name: insights
     label: Insights
     folder: src/content/insights

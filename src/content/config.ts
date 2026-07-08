@@ -99,4 +99,103 @@ const legal = defineCollection({
   }),
 });
 
-export const collections = { insights, hero, approach, contact, partners, partnersSection, settings, legal };
+// One YAML file per questionnaire, flat in src/content/questionnaires/<slug>.yaml
+// (same folder-collection shape as `partners`, so adding a second
+// questionnaire later is just a new file - no code change). Reachable only
+// at /questionnaire/<slug>, never linked from site nav.
+//
+// Question `type` covers exactly the shapes this site's questionnaires have
+// needed so far - not a generic form-builder:
+//  - scale:  1-5 rating with labelled endpoints
+//  - single: single-select, with an optional free-text "detail" box that
+//            can be always-shown or only revealed for specific answers
+//  - multi:  checkbox list (optionally capped via maxSelections), same
+//            optional detail box
+//  - rankTwo: pick exactly two options; the order clicked is the rank
+//  - grid:   a row x column matrix (e.g. Yes/No/Not sure per row), with an
+//            optional per-row follow-up text field shown for one column
+//  - open:   free text
+// `showIfQuestionId`/`showIfValues` makes a question's visibility depend on
+// an earlier question's answer (e.g. a follow-up shown only when someone
+// answered "No" to something else).
+const questionOptionalFields = {
+  detailPrompt: z.string().optional(),
+  detailShowIfValues: z.array(z.string()).optional(), // omitted = always show once answered
+  showIfQuestionId: z.string().optional(),
+  showIfValues: z.array(z.string()).optional(),
+};
+
+const questionSchema = z.object({
+  id: z.string(),
+  type: z.enum(['scale', 'single', 'multi', 'rankTwo', 'grid', 'open']),
+  // Shown before the prompt as "Q1.", "Q2." etc - omitted (e.g. a question
+  // that's a continuation of the previous one, or a question deliberately
+  // left out of the numbered sequence) renders with no prefix at all.
+  displayNumber: z.string().optional(),
+  prompt: z.string(),
+  scaleMin: z.number().optional(),
+  scaleMax: z.number().optional(),
+  scaleMinLabel: z.string().optional(),
+  scaleMaxLabel: z.string().optional(),
+  options: z.array(z.string()).optional(), // single / multi / rankTwo
+  maxSelections: z.number().optional(),    // multi
+  gridColumns: z.array(z.string()).optional(),
+  gridRows: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    optional: z.boolean().optional(), // true = this row can be left blank, e.g. an "Other" row
+  })).optional(),
+  gridFollowUpColumn: z.string().optional(),
+  gridFollowUpPrompt: z.string().optional(),
+  ...questionOptionalFields,
+});
+
+const questionnaires = defineCollection({
+  type: 'data',
+  schema: z.object({
+    title: z.string(),
+    intro: z.string(),
+    formVersion: z.number(),
+    submitLabel: z.string().default('See my results'),
+    // The opt-in gate, if present, is asked first and controls whether the
+    // closing contact step appears at all - answering "no" skips straight
+    // to a thank-you with no name/email ever requested.
+    gate: z.object({
+      id: z.string(),
+      prompt: z.string(),
+      yesLabel: z.string(),
+      noLabel: z.string(),
+      note: z.string().optional(),
+    }).optional(),
+    sections: z.array(z.object({
+      heading: z.string().optional(),
+      intro: z.string().optional(),
+      questions: z.array(questionSchema),
+    })),
+    closing: z.object({
+      leadText: z.string(),
+      consentNote: z.string(),
+      fields: z.array(z.enum(['name', 'organisation', 'email'])).default(['name', 'organisation', 'email']),
+      // Off by default: this questionnaire's own consent copy is a single
+      // opt-in (tied to the gate above), not the two-purpose report vs.
+      // marketing-contact consent some other questionnaire might want.
+      offerMarketingConsent: z.boolean().default(false),
+      marketingLabel: z.string().optional(),
+    }).optional(),
+  }).superRefine((data, ctx) => {
+    const allIds = [
+      ...(data.gate ? [data.gate.id] : []),
+      ...data.sections.flatMap((s) => s.questions.map((q) => q.id)),
+    ];
+    const seen = new Set<string>();
+    for (const id of allIds) {
+      if (seen.has(id)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Duplicate question id "${id}" - question ids must be unique within a questionnaire` });
+        return;
+      }
+      seen.add(id);
+    }
+  }),
+});
+
+export const collections = { insights, hero, approach, contact, partners, partnersSection, settings, legal, questionnaires };
