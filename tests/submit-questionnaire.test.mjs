@@ -199,3 +199,42 @@ describe('submit-questionnaire.mjs - other behaviour', () => {
     assert.equal(fetchMock.mock.calls.length, 0);
   });
 });
+
+describe('submit-questionnaire.mjs - SITE_URL resolves to the current deploy, not always production', () => {
+  test('DEPLOY_PRIME_URL wins over URL, so a branch deploy links back to itself', async (t) => {
+    // Reproduces a real bug found via manual staging testing: Netlify's `URL`
+    // is always the production domain regardless of which deploy is running,
+    // while `DEPLOY_PRIME_URL` is the branch-specific URL on a branch deploy
+    // (and equals `URL` on an actual production deploy). Checking `URL` first
+    // meant every confirm/unsubscribe link, from any environment, pointed at
+    // production.
+    const { handler } = await loadSubmit({
+      URL: 'https://valorapartners.co.uk',
+      DEPLOY_PRIME_URL: 'https://astro-rebuild--valora.netlify.app',
+    });
+    const insertedRow = { id: 'row-xyz-999' };
+    const captured = [];
+    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+
+    await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: true })));
+
+    for (const email of captured) {
+      assert.doesNotMatch(email.html, /href="https:\/\/valorapartners\.co\.uk\//,
+        `${email.subject} must not link back to the production domain`);
+    }
+    const confirmationEmail = captured.find((e) => e.subject.startsWith('Please confirm'));
+    assert.match(confirmationEmail.html, /href="https:\/\/astro-rebuild--valora\.netlify\.app\/\.netlify\/functions\/confirm-subscription\?t=/);
+  });
+
+  test('production deploy (DEPLOY_PRIME_URL absent, as Netlify only sets it on branch/PR deploys) falls back to URL', async (t) => {
+    const { handler } = await loadSubmit({ URL: 'https://valorapartners.co.uk', DEPLOY_PRIME_URL: undefined });
+    const insertedRow = { id: 'row-xyz-999' };
+    const captured = [];
+    t.mock.method(globalThis, 'fetch', routedFetch([insertRule(insertedRow), resendEmailsRule(captured)]));
+
+    await handler(postEvent(basePayload({ wantsReport: true, marketingConsent: true })));
+
+    const confirmationEmail = captured.find((e) => e.subject.startsWith('Please confirm'));
+    assert.match(confirmationEmail.html, /href="https:\/\/valorapartners\.co\.uk\/\.netlify\/functions\/confirm-subscription\?t=/);
+  });
+});

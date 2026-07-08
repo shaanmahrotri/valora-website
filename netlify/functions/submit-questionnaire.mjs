@@ -6,7 +6,13 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const CONSENT_TOKEN_SECRET = process.env.CONSENT_TOKEN_SECRET;
 const NOTIFY_EMAIL_FROM = process.env.NOTIFY_EMAIL_FROM;
 const NOTIFY_EMAIL_TO = process.env.NOTIFY_EMAIL_TO;
-const SITE_URL = process.env.URL || process.env.DEPLOY_PRIME_URL || '';
+// DEPLOY_PRIME_URL first, not URL: Netlify's `URL` is always the production
+// domain regardless of deploy context, while `DEPLOY_PRIME_URL` resolves to
+// the stable branch-deploy subdomain on a branch deploy (and equals `URL` on
+// an actual production deploy, so this is a no-op change there). Checking
+// `URL` first - the previous order - meant every confirm/unsubscribe link
+// ever generated, from any environment, pointed at production.
+const SITE_URL = process.env.DEPLOY_PRIME_URL || process.env.URL || '';
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
