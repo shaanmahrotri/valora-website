@@ -13,14 +13,16 @@ an access/erasure request once the questionnaire is live.
 2. Run `scripts/supabase-schema.sql` once in the Supabase SQL editor.
 3. In Netlify (Project configuration → Environment variables), set the
    variables listed in `.env.example`: `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `CONSENT_TOKEN_SECRET`
-   (generate with `openssl rand -hex 32`), `NOTIFY_EMAIL_FROM`,
-   `NOTIFY_EMAIL_TO`, `PRIVACY_POLICY_VERSION`.
+   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`,
+   `CONSENT_TOKEN_SECRET` (generate with `openssl rand -hex 32`),
+   `NOTIFY_EMAIL_FROM`, `NOTIFY_EMAIL_TO`, `PRIVACY_POLICY_VERSION`.
 4. Request Supabase's Data Processing Agreement (support ticket from the
    Supabase dashboard, or email support@supabase.io) — needed for the
    GDPR paper trail.
 5. In Resend, verify a sending domain (adds SPF/DKIM/DMARC DNS records to
    the Valora domain) — required before `NOTIFY_EMAIL_FROM` can send.
+   Afterwards, create a Resend **Audience** and set its ID as
+   `RESEND_AUDIENCE_ID`, so confirmed marketing contacts sync into it.
 6. Set up a free external uptime pinger (UptimeRobot or cron-job.org)
    hitting `/.netlify/functions/keepalive` every few days, so the Supabase
    free-tier project doesn't auto-pause from inactivity between prospect
@@ -40,18 +42,28 @@ an access/erasure request once the questionnaire is live.
 ## Handling an access or erasure request
 
 The privacy policy (`src/content/legal/privacy.yaml`) promises access,
-correction and deletion on request, handled manually (no self-serve UI in
-this first version, given the expected low volume of submissions).
+correction and deletion on request. Marketing opt-out is self-serve — every
+marketing email footer includes an unsubscribe link that sets
+`marketing_consent = false`, stamps `unsubscribed_at`, and (best-effort)
+removes the person from the Resend Audience too, so no further manual
+action is needed there on top of the Supabase flag. Access, correction and
+full erasure remain manual, handled by email given the expected low volume
+of submissions.
+
+An unsubscribed person's row shows `marketing_consent = false` with
+`unsubscribed_at` set, while `marketing_consent_confirmed_at` stays
+populated as the historical record of their earlier opt-in.
 
 When someone emails `privacy@valorapartners.co.uk` asking about their
 questionnaire data:
 
-1. Open the Supabase project → **Table Editor** → `questionnaire_responses`.
+1. Open the Supabase project → **Table Editor** → `questionnaire_responses`
+   (or the NocoDB CRM view, if set up — see `docs/crm-setup.md`).
 2. Filter by their email address (the `email` column).
 3. **For an access request**: export/screenshot the matching row(s) and
    reply with what's held — questionnaire answers, whether a report was
    sent, and their current consent status (`marketing_consent`,
-   `marketing_consent_confirmed_at`).
+   `marketing_consent_confirmed_at`, `unsubscribed_at`).
 4. **For an erasure request**: delete the matching row(s) directly in the
    Table Editor. This immediately and permanently removes their answers
    and contact details — there is no separate backup process to also
