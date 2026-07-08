@@ -159,3 +159,12 @@ for PPTX/Word client deliverables, not this site).
   (`astro-decap-cms`'s wrapper logic, and Decap's own React peer
   dependency). `npm view <pkg> peerDependencies` and reading the actual
   installed `.d.ts`/source is faster than re-guessing.
+- Any CSS meant to style elements inside content rendered via `set:html`
+  (legal pages' paragraphs, the questionnaire's consent note) needs
+  `:global()` around the selector - Astro's scoped-style compiler never
+  sees raw injected HTML at build time, so it can't stamp the scoped
+  attribute onto those elements, and a plain scoped selector silently
+  never matches. Confirmed twice now: the questionnaire consent-note link,
+  and all four legal pages' `.legal__link` (fixed by wrapping both the
+  base and `:hover` rules in `:global()`) - check for this class of bug
+  wherever new `set:html` content gets its own styling.
