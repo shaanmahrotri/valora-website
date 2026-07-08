@@ -275,4 +275,4 @@ closing:
     - "organisation"
     - "email"
   consentNote: "Adding your details links them to the answers you've just given. Your name, family office name and email are used only to send your personalised comparison report, and are stored separately from your survey answers. Any benchmarking data shared back to the group is fully anonymised and no individual response is ever attributed. Your details are not shared with any third party, and you can ask us to delete them at any time by emailing datacontroller@valorapartners.co.uk. Processed under UK GDPR on the basis of the consent given here."
-  offerMarketingConsent: false
+  offerMarketingConsent: true
