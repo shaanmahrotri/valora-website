@@ -161,6 +161,25 @@ immune to that whole failure class.
   `astro-rebuild` - per the permanent-staging note above, it stays the
   ongoing place to build and review the next round of changes before they
   get merged to `main` the same way.
+- ~~**Branch-naming: rename `astro-rebuild` to `staging`?**~~ Considered and
+  declined 090726. Investigated the real coupling: **nothing in
+  `netlify.toml` is name-bound**; the only functional repo reference is
+  `public/admin/config.yml`'s `branch:` field; everything else is docs and
+  test fixtures. The actual cost of a rename lives in the Netlify dashboard
+  (the branch-deploy target list, and the branch-context `DEPLOY_BASE_URL`
+  whose value tracks the `<branch>--<site>.netlify.app` preview URL) plus a
+  now-dead old preview URL - a coordinated multi-system change for purely
+  cosmetic clarity. **Decided: leave it as `astro-rebuild`.** It remains the
+  permanent staging branch; treat "staging" as its role, not its name.
+- **Git workflow visual walkthrough - to do in a fresh session.** A
+  plain-English, **diagram-led** walk-through (Shaan learns visually) of how
+  to use short-lived feature branches, pull requests and git worktrees for
+  feature work on this repo specifically: branch off `astro-rebuild`
+  (staging) -> PR back into `astro-rebuild` -> merge to `main` to promote to
+  production, and when a worktree beats a branch. The deliverable should be
+  actual diagrams of the branch/PR/worktree flow, not prose. This was
+  "Phase 3" of the 2026-07 audit engagement, deferred to its own session on
+  request.
 
 ## Visual design (site)
 
