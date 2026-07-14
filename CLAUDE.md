@@ -137,9 +137,19 @@ immune to that whole failure class.
   usual classic `handler(event)` shape - a Netlify requirement for
   scheduled functions specifically, not a stylistic drift; the other three
   functions are unaffected and unchanged. `docs/questionnaire-data-requests.md`
-  step 6 updated to match. Verify after the next deploy that the function
-  actually fires on schedule (Netlify UI -> Functions -> keepalive should
-  show scheduled invocations within 24h).
+  step 6 updated to match. **Shipped to production 090726** (`main` @
+  `9ea4569`) - confirmed via the Netlify CLI (`netlify api getDeploy`,
+  `function_schedules` field) that the schedule registered correctly on
+  both the staging and production deploys: `{"cron":"0 6 * * *",
+  "name":"keepalive"}`. The one thing that still can't be checked from a
+  build artefact - whether it actually *fires* on schedule, not just
+  registers - only becomes checkable after the first scheduled run;
+  Netlify UI -> Functions -> keepalive should show an invocation log
+  within 24h of this shipping. **Netlify CLI is now installed globally**
+  on this machine (`netlify-cli`, logged in as Shaan, linked to site
+  `admirable-yeot-4e5bde`) - prefer `netlify api <method>` for this kind
+  of live-state verification going forward over guessing at dashboard
+  navigation, which was the friction that prompted installing it.
 - **Hosted CMS ("Stage B").** Decided (250626): use Decap's `github`
   backend, not `git-gateway`. Git Gateway is Netlify-deprecated - confirmed
   directly against Netlify's own docs: still functions, security issues
