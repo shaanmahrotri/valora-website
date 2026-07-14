@@ -200,15 +200,10 @@ immune to that whole failure class.
   now-dead old preview URL - a coordinated multi-system change for purely
   cosmetic clarity. **Decided: leave it as `astro-rebuild`.** It remains the
   permanent staging branch; treat "staging" as its role, not its name.
-- **Git workflow visual walkthrough - to do in a fresh session.** A
-  plain-English, **diagram-led** walk-through (Shaan learns visually) of how
-  to use short-lived feature branches, pull requests and git worktrees for
-  feature work on this repo specifically: branch off `astro-rebuild`
-  (staging) -> PR back into `astro-rebuild` -> merge to `main` to promote to
-  production, and when a worktree beats a branch. The deliverable should be
-  actual diagrams of the branch/PR/worktree flow, not prose. This was
-  "Phase 3" of the 2026-07 audit engagement, deferred to its own session on
-  request.
+- ~~**Git workflow visual walkthrough.**~~ "Phase 3" of the 2026-07 audit
+  engagement - a plain-English, diagram-led walk-through of short-lived
+  feature branches, pull requests and git worktrees for this repo
+  specifically. Delivered in a separate session, as planned.
 
 ## Visual design (site)
 
