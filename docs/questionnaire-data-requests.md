@@ -45,12 +45,17 @@ an access/erasure request once the questionnaire is live.
    Create the **second** API key here too (Full access, for
    `RESEND_CONTACTS_API_KEY`) — see step 3 above for why it must be
    separate from the sending key.
-6. Set up a free external uptime pinger (UptimeRobot or cron-job.org)
-   hitting `/.netlify/functions/keepalive` every few days, so the Supabase
-   free-tier project doesn't auto-pause from inactivity between prospect
-   sends. This has to be the `keepalive` function specifically, not the
-   site's homepage — the homepage never talks to Supabase, so pinging it
-   does nothing for Supabase's own inactivity timer.
+6. ~~Set up a free external uptime pinger~~ — no action needed.
+   `netlify/functions/keepalive.mjs` is a **Netlify Scheduled Function**
+   (`export const config = { schedule: '0 6 * * *' }`), so Netlify itself
+   calls it once a day automatically once this deploys — no external
+   account, no URL to hand to a third-party service, nothing to configure
+   here. (Originally this step asked you to point an external service like
+   UptimeRobot or cron-job.org at `/.netlify/functions/keepalive` — switched
+   090726 because scheduled functions are simpler and don't depend on a
+   third-party free-tier feature gate. Hitting the site's homepage still
+   wouldn't work for this — the homepage never talks to Supabase, so only
+   this function's own scheduled run resets Supabase's inactivity timer.)
 7. **Before sharing the questionnaire link with anyone**, verify RLS is
    actually blocking the anon key:
    ```bash

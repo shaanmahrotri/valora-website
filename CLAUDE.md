@@ -121,21 +121,25 @@ immune to that whole failure class.
 
 ## Roadmap - not yet built
 
-- **Confirm the Supabase keepalive pinger is actually configured.** Flagged
-  090726 after an unrelated free-tier Supabase project (not Valora's) got
-  auto-paused for 7 days of inactivity, prompting a check here.
-  `netlify/functions/keepalive.mjs` exists specifically to prevent this -
-  `docs/questionnaire-data-requests.md` step 6 instructs setting up a free
-  external uptime pinger (UptimeRobot or cron-job.org) hitting
-  `/.netlify/functions/keepalive` every few days - but there is no evidence
-  in the repo, git history, or docs that this external step was ever
-  actually completed (only the doc instruction and the function itself
-  exist). Verified live 090726 that Valora's Supabase project IS currently
-  reachable, but that only proves it's warm today, not that a recurring
-  pinger is actually configured - real traffic could be masking the gap.
-  **Action needed:** either (a) confirm an UptimeRobot/cron-job.org monitor
-  already exists and is pointed at the right URL, or (b) set one up (free,
-  ~2 minutes, needs an account only Shaan can create) if it doesn't.
+- ~~**Confirm the Supabase keepalive pinger is actually configured.**~~
+  Flagged 090726 after an unrelated free-tier Supabase project (not
+  Valora's) got auto-paused for 7 days of inactivity. Investigated and
+  found no evidence the documented external-uptime-pinger step
+  (UptimeRobot/cron-job.org hitting `/.netlify/functions/keepalive`) had
+  ever actually been completed - only the doc instruction and the function
+  existed. When setting one up, the external service's free tier turned
+  out to gate plain GET monitoring behind a paid plan. **Resolved 090726
+  by switching `keepalive.mjs` to a Netlify Scheduled Function** instead
+  (`export const config = { schedule: '0 6 * * *' }`) - Netlify's own
+  cron now calls it once a day, no third-party account or free-tier gate
+  involved. This required the newer Request/Response handler shape
+  (`export default async () => new Response(...)`) instead of this repo's
+  usual classic `handler(event)` shape - a Netlify requirement for
+  scheduled functions specifically, not a stylistic drift; the other three
+  functions are unaffected and unchanged. `docs/questionnaire-data-requests.md`
+  step 6 updated to match. Verify after the next deploy that the function
+  actually fires on schedule (Netlify UI -> Functions -> keepalive should
+  show scheduled invocations within 24h).
 - **Hosted CMS ("Stage B").** Decided (250626): use Decap's `github`
   backend, not `git-gateway`. Git Gateway is Netlify-deprecated - confirmed
   directly against Netlify's own docs: still functions, security issues
