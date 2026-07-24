@@ -22,3 +22,12 @@ yarn-error.log*
 
 # skill eval scratch (test run outputs, not part of the skill itself)
 .claude/skills/*-workspace/
+
+# Python venvs bundled with skills (e.g. questionnaire-pdf-export) - local,
+# machine-specific, reinstalled from scripts/requirements.txt, never committed
+.venv/
+
+# generated PDF exports contain real respondent PII - never committed, even
+# if a skill is ever run with a relative/local output path by mistake
+.claude/skills/*/output/
+.claude/skills/*/pdfs/
