@@ -671,22 +671,22 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   .qform__progress { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
   .qform__progress-track { flex: 1; height: 3px; background: var(--divider); position: relative; }
   .qform__progress-fill { height: 100%; background: var(--gold); transition: width 0.25s ease; }
-  .qform__progress-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint-alt); white-space: nowrap; }
+  .qform__progress-label { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
 
   .qform__step { display: flex; flex-direction: column; }
   .qform__step > * + * { margin-top: 40px; }
   .qform__section-heading + .qform__section-intro { margin-top: 12px; }
   .qform__section-intro + .qform__q { margin-top: 28px; }
 
-  .qform__section-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); }
+  .qform__section-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); }
   .qform__section-intro { font-size: 14px; color: var(--muted); line-height: 1.8; background: var(--paper); border: 1px solid var(--divider); padding: 16px 20px; }
 
   .qform__q { border: none; padding: 0; display: flex; flex-direction: column; gap: 14px; }
   .qform__prompt { font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0; padding: 0; }
-  .qform__q-number { font-weight: 600; color: var(--faint-alt); }
+  .qform__q-number { font-weight: 600; color: var(--muted); }
   .qform__q--error { border-left: 3px solid var(--gold-ink); margin-left: -17px; padding-left: 14px; }
-  .qform__q--error .qform__prompt { color: var(--gold-ink); }
-  .qform__note { font-size: 13px; color: var(--faint); line-height: 1.6; }
+  .qform__q--error .qform__prompt { color: var(--ink); }
+  .qform__note { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
   /* Option surfaces - the site's own rule is hairlines, not card shadows
      ("Sections are separated by full-width top hairlines, not cards"), so
@@ -727,7 +727,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
 
   /* Scale */
   .qform__scale { display: flex; align-items: center; gap: 16px; }
-  .qform__scale-label { font-size: 12px; color: var(--faint-alt); max-width: 11ch; line-height: 1.4; flex-shrink: 0; }
+  .qform__scale-label { font-size: 12px; color: var(--muted); max-width: 11ch; line-height: 1.4; flex-shrink: 0; }
   .qform__scale-label:first-child { text-align: left; }
   .qform__scale-label:last-child { text-align: right; }
   .qform__scale-options { display: flex; gap: 8px; flex: 1; justify-content: center; }
@@ -749,7 +749,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
 
   /* Detail / free-text fields */
   .qform__detail { margin-top: -2px; }
-  .qform__field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint-alt); }
+  .qform__field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .qform__field input,
   .qform__field textarea {
     font-size: 15px;
@@ -774,7 +774,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   .qform__check { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--body); margin-bottom: 14px; cursor: pointer; }
   .qform__check input { accent-color: var(--gold); width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
 
-  .qform__privacy { font-size: 13px; color: var(--faint); line-height: 1.7; margin-top: 8px; }
+  .qform__privacy { font-size: 13px; color: var(--muted); line-height: 1.7; margin-top: 8px; }
   /* :global() because consentNote is injected via set:html - Astro never sees
      this <a> at build time, so it can't stamp the scoped-style attribute onto
      it, and an un-escaped ".qform__privacy a" rule silently never matches. */
@@ -799,7 +799,7 @@ const stepCount = (gate ? 1 : 0) + sections.length + (closing ? 1 : 0);
   .qform__btn--ghost { background: none; border-color: var(--divider); color: var(--muted); }
   .qform__btn--ghost:hover { border-color: var(--ink); color: var(--ink); }
 
-  .qform__error { color: var(--gold-ink); font-size: 13px; margin-top: 16px; }
+  .qform__error { color: var(--ink); font-size: 13px; margin-top: 16px; }
 
   .qform__thanks { padding-top: 8px; }
   .qform__thanks h2 { font-size: 32px; font-weight: 300; color: var(--ink); margin-bottom: 12px; }

@@ -68,12 +68,12 @@ const { position, prevHref = null, nextHref = null, showSearch = true } = Astro.
     transition: border-color 0.15s;
   }
   .bar__search:focus-within { border-color: var(--gold); }
-  .bar__icon { font-size: 13px; color: var(--faint-alt); line-height: 1; }
+  .bar__icon { font-size: 13px; color: var(--muted); line-height: 1; }
   .bar__search input { border: none; background: none; outline: none; font-size: 13px; font-weight: 400; color: var(--ink); width: 100%; }
   .bar__nav { display: flex; align-items: center; gap: 14px; }
   .bar__arrow { font-size: 18px; line-height: 1; color: var(--ink); }
   .bar__arrow--off { color: var(--divider); }
-  .bar__pos { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--faint-alt); white-space: nowrap; }
+  .bar__pos { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; }
 
   @media (max-width: 900px) {
     /* Sit below the 56px sticky mobile header */

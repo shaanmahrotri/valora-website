@@ -36,6 +36,12 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html {
+  background: var(--sand);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
@@ -55,6 +61,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 input { font-family: inherit; }
 img { display: block; max-width: 100%; }
 
+::selection { background: var(--gold); color: var(--ink); }
+
+:where(a, button, [tabindex], input, textarea, select):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
 /* shared atoms ------------------------------------------------ */
 
 .kicker {
@@ -62,7 +75,7 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--ink);
   display: block;
 }
 

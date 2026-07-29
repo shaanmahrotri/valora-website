@@ -132,12 +132,12 @@ const latest = insightsEnabled
     flex-direction: column;
     gap: 12px;
   }
-  .ins__latest { font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-deep); }
+  .ins__latest { font-size: 9px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
   .ins__item { display: block; }
   .ins__title { font-size: 12px; font-weight: 400; color: var(--ink); line-height: 1.35; letter-spacing: 0.01em; }
-  .ins__item:hover .ins__title { color: var(--gold-deep); }
-  .ins__meta { font-size: 9.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint-alt); margin-top: 4px; }
-  .ins__all { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-deep); margin-top: 2px; }
+  .ins__item:hover .ins__title { text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+  .ins__meta { font-size: 9.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .ins__all { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
   .ins__all:hover { color: var(--ink); }
 
   .panel__foot { margin-top: 40px; }
@@ -149,9 +149,8 @@ const latest = insightsEnabled
     font-weight: 400;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--faint);
-    opacity: 0.6;
-    transition: opacity 0.15s, color 0.15s;
+    color: var(--muted);
+    transition: color 0.15s;
   }
   .panel__legal-link:hover { opacity: 1; color: var(--ink); }
 </style>
