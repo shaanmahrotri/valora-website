@@ -26,7 +26,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
   <!-- HERO -->
   <section id="about" class="hero">
     <div class="hero__text">
-      <span class="kicker" style="margin-bottom:36px">{hero.data.kicker}</span>
+      <span class="kicker" style="margin-bottom:36px"><span class="kicker__mark">/</span><span class="kicker__label">{hero.data.kicker}</span></span>
       <h1>{hero.data.headline}</h1>
       <div class="hero__body">
         {hero.data.bodyParagraphs.map((p) => <p>{p}</p>)}
@@ -40,7 +40,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   <!-- APPROACH -->
   <section id="approach" class="section">
-    <span class="kicker" style="margin-bottom:32px">Approach</span>
+    <span class="kicker" style="margin-bottom:32px"><span class="kicker__mark">/</span><span class="kicker__label">Approach</span></span>
 
     <div class="approach__split">
       <Plate ratio="9 / 22" src={approach.data.photo} alt="A tree-lined garden path leading toward a flight of stone steps" label="Photograph · material" note="A tree-lined path in dappled light, steps rising at its end. Patience, continuity, the long view." spec="900 × 2200" />
@@ -58,7 +58,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   <!-- PARTNERS -->
   <section id="partners" class="section">
-    <h2 class="kicker" style="margin-bottom:32px">Partners</h2>
+    <h2 class="kicker" style="margin-bottom:32px"><span class="kicker__mark">/</span><span class="kicker__label">Partners</span></h2>
     <p class="partners__intro">{partnersSection.data.intro}</p>
     <div class="partners">
       <div class="partner">
@@ -98,7 +98,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
     <section id="insights" class="section insights-summary">
       <div class="insights-summary__head">
         <div>
-          <span class="kicker" style="margin-bottom:18px">Insights</span>
+          <span class="kicker" style="margin-bottom:18px"><span class="kicker__mark">/</span><span class="kicker__label">Insights</span></span>
           <h2 class="statement statement--tight">Writing on foundations, governance and the long work of family offices.</h2>
         </div>
         <a href="/insights" class="insights-summary__all">All insights →</a>
@@ -130,7 +130,7 @@ const partnersSection = await getEntry('partnersSection', 'index');
 
   <!-- CONTACT -->
   <section id="contact" class="section">
-    <h2 class="kicker" style="margin-bottom:40px">Contact</h2>
+    <h2 class="kicker" style="margin-bottom:40px"><span class="kicker__mark">/</span><span class="kicker__label">Contact</span></h2>
     <div class="contact">
       <p class="contact__lead">{contact.data.lead}</p>
       <div class="contact__row">

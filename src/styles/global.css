@@ -71,12 +71,24 @@ img { display: block; max-width: 100%; }
 /* shared atoms ------------------------------------------------ */
 
 .kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+}
+.kicker__mark {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  transform: skewX(-10deg);
+  display: inline-block;
+}
+.kicker__label {
   font-size: 19px;
   font-weight: 700;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--ink);
-  display: block;
 }
 
 .gold-rule { width: 40px; height: 3px; background: var(--gold); }
