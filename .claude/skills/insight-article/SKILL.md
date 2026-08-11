@@ -23,7 +23,7 @@ Valora currently has exactly two contributors. Match the byline (or ask "whose p
 | Author | role | authorImg |
 |---|---|---|
 | Tom Rutherford | `Family Office and Trust Advisor` | `/tom-rutherford.jpg` |
-| Shaan Mahrotri | `Strategic Advisor and Investor` | `/shaan-mahrotri.jpg` |
+| Shaan Mahrotri | `Strategic Advisor and Operator` | `/shaan-mahrotri.jpg` |
 
 Both images already exist in `public/`. If the article is from someone outside this list, stop and ask for their role and a headshot — don't invent either.
 

@@ -23,7 +23,7 @@
       "expected_output": "A new .md file with author Shaan Mahrotri, the supplied image placed in /public under the article's slug and set as leadImage, bold markup stripped from the body, the 3-item bullet list folded into flowing prose, the H1-style '# Why most...' heading treated as the title rather than rendered as a body heading, plus the usual frontmatter inference and order/featured renumbering.",
       "files": ["test-fixtures/sample-lead-image.jpg"],
       "expectations": [
-        "Article frontmatter sets author to 'Shaan Mahrotri', role to 'Strategic Advisor and Investor', and authorImg to '/shaan-mahrotri.jpg'",
+        "Article frontmatter sets author to 'Shaan Mahrotri', role to 'Strategic Advisor and Operator', and authorImg to '/shaan-mahrotri.jpg'",
         "The body contains no '**bold**' or '*italic*' markdown markup carried over from the source",
         "The source's leading '# ' H1 line is used as the frontmatter title and does not also appear as a heading inside the body",
         "The source's 3-item bullet list is folded into flowing prose rather than left as an unstyled markdown list",

@@ -4,7 +4,7 @@ published: true
 topic: "Foundations"
 excerpt: "A constitution describes a family. Only a tested refusal reveals what the office is actually for."
 author: "Shaan Mahrotri"
-role: "Strategic Advisor and Investor"
+role: "Strategic Advisor and Operator"
 authorImg: "/shaan-mahrotri.jpg"
 read: "5 min read"
 date: "June 2026"

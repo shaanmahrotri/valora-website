@@ -4,7 +4,7 @@ published: true
 topic: "Technology"
 excerpt: "86% of family offices use AI. 65% still run core operations on spreadsheets. A case for integration over adoption."
 author: "Shaan Mahrotri"
-role: "Strategic Advisor and Investor"
+role: "Strategic Advisor and Operator"
 authorImg: "/shaan-mahrotri.jpg"
 read: "4 min read"
 date: "July 2026"
